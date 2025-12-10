@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -76,6 +76,53 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="data\backpack\shanghai_busstop备用.cpg" />
+    <None Include="data\backpack\shanghai_busstop备用.dbf" />
+    <None Include="data\backpack\shanghai_busstop备用.prj" />
+    <None Include="data\backpack\shanghai_busstop备用.sbn" />
+    <None Include="data\backpack\shanghai_busstop备用.sbx" />
+    <None Include="data\backpack\shanghai_busstop备用.shp" />
+    <None Include="data\backpack\shanghai_busstop备用.shx" />
+    <None Include="data\backpack\shanghai_district_p投影.cpg" />
+    <None Include="data\backpack\shanghai_district_p投影.dbf" />
+    <None Include="data\backpack\shanghai_district_p投影.prj" />
+    <None Include="data\backpack\shanghai_district_p投影.sbn" />
+    <None Include="data\backpack\shanghai_district_p投影.sbx" />
+    <None Include="data\backpack\shanghai_district_p投影.shp" />
+    <None Include="data\backpack\shanghai_district_p投影.shx" />
+    <None Include="data\backpack\shanghai_district备用.cpg" />
+    <None Include="data\backpack\shanghai_district备用.dbf" />
+    <None Include="data\backpack\shanghai_district备用.prj" />
+    <None Include="data\backpack\shanghai_district备用.sbn" />
+    <None Include="data\backpack\shanghai_district备用.sbx" />
+    <None Include="data\backpack\shanghai_district备用.shp" />
+    <None Include="data\backpack\shanghai_district备用.shx" />
+    <None Include="data\line2stop.xlsx" />
+    <None Include="data\routes.csv" />
+    <None Include="data\route_stops.csv" />
+    <None Include="data\shanghai_busline.cpg" />
+    <None Include="data\shanghai_busline.dbf" />
+    <None Include="data\shanghai_busline.prj" />
+    <None Include="data\shanghai_busline.sbn" />
+    <None Include="data\shanghai_busline.sbx" />
+    <None Include="data\shanghai_busline.shp" />
+    <None Include="data\shanghai_busline.shx" />
+    <None Include="data\shanghai_busstop.cpg" />
+    <None Include="data\shanghai_busstop.dbf" />
+    <None Include="data\shanghai_busstop.prj" />
+    <None Include="data\shanghai_busstop.sbn" />
+    <None Include="data\shanghai_busstop.sbx" />
+    <None Include="data\shanghai_busstop.shp" />
+    <None Include="data\shanghai_busstop.shx" />
+    <None Include="data\shanghai_district.cpg" />
+    <None Include="data\shanghai_district.dbf" />
+    <None Include="data\shanghai_district.prj" />
+    <None Include="data\shanghai_district.sbn" />
+    <None Include="data\shanghai_district.sbx" />
+    <None Include="data\shanghai_district.shp" />
+    <None Include="data\shanghai_district.shx" />
+    <None Include="data\stops_geo.csv" />
+    <None Include="data\stop_routes.csv" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -88,6 +135,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="data\backpack\shanghai_district_p投影.xml" />
+    <Content Include="data\backpack\shanghai_district备用.xml" />
+    <Content Include="data\PreProcess.py" />
+    <Content Include="data\shanghai_busstop.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

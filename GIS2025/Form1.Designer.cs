@@ -206,7 +206,7 @@
             this.Controls.Add(this.bZoomOut);
             this.Controls.Add(this.bZoomIn);
             this.Name = "FormMap";
-            this.Text = "Form1";
+            this.Text = "TransitLog - '交'游手账：个人公交足迹管理系统";
             this.SizeChanged += new System.EventHandler(this.FormMap_SizeChanged);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.FormMap_Paint);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.FormMap_MouseClick);
