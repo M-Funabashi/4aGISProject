@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading;
+using System.Windows.Forms; // 引用 MessageBox
 using XGIS;
 
 namespace GIS2025
@@ -16,12 +17,8 @@ namespace GIS2025
         // URL 模板
         private const string UrlTemplate = "http://t0.tianditu.gov.cn/{0}_c/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={0}&STYLE=default&TILEMATRIXSET=c&FORMAT=tiles&TILEMATRIX={1}&TILEROW={2}&TILECOL={3}&tk={4}";
 
-        // 内存缓存
         private Dictionary<string, Image> _memoryCache = new Dictionary<string, Image>();
-        // 下载队列
         private HashSet<string> _downloading = new HashSet<string>();
-
-        // 【新增】线程锁对象
         private readonly object _syncLock = new object();
 
         public bool IsVisible = true;
@@ -31,6 +28,9 @@ namespace GIS2025
             _apiKey = apiKey;
             _cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tile_cache");
             if (!Directory.Exists(_cacheDir)) Directory.CreateDirectory(_cacheDir);
+
+            // 【关键修复 1】强制使用 TLS 1.2，否则天地图连不上
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         }
 
         public void Draw(Graphics g, XView view)
@@ -40,22 +40,26 @@ namespace GIS2025
             // 计算层级
             double resolution = 1.0 / (view.ToScreenPoint(new XVertex(1, 0)).X - view.ToScreenPoint(new XVertex(0, 0)).X);
             int zoom = (int)Math.Round(Math.Log(1.40625 / resolution, 2));
-            zoom = Math.Max(1, Math.Min(18, zoom));
+            zoom = Math.Max(1, Math.Min(18, zoom)); // 限制范围
 
             double tileDeg = 360.0 / Math.Pow(2, zoom);
 
-            // 计算索引范围
+            // 计算范围
             double minX = view.CurrentMapExtent.GetMinX();
             double maxX = view.CurrentMapExtent.GetMaxX();
             double minY = view.CurrentMapExtent.GetMinY();
             double maxY = view.CurrentMapExtent.GetMaxY();
+
+
 
             int startCol = (int)Math.Floor((minX + 180.0) / tileDeg);
             int endCol = (int)Math.Floor((maxX + 180.0) / tileDeg);
             int startRow = (int)Math.Floor((90.0 - maxY) / tileDeg);
             int endRow = (int)Math.Floor((90.0 - minY) / tileDeg);
 
-            // 循环绘制
+            // 限制循环次数，防止一次请求太多卡死
+            if ((endCol - startCol) * (endRow - startRow) > 200) return;
+
             for (int r = startRow; r <= endRow; r++)
             {
                 for (int c = startCol; c <= endCol; c++)
@@ -73,46 +77,34 @@ namespace GIS2025
 
             Image img = null;
 
-            // ==========================================
-            // 【修改点 1】 读取内存缓存时加锁
-            // ==========================================
             lock (_syncLock)
             {
-                if (_memoryCache.ContainsKey(tileKey))
-                {
-                    img = _memoryCache[tileKey];
-                }
+                if (_memoryCache.ContainsKey(tileKey)) img = _memoryCache[tileKey];
             }
 
-            // 如果内存没有，尝试读磁盘
             if (img == null && File.Exists(localPath))
             {
                 try
                 {
                     using (FileStream fs = new FileStream(localPath, FileMode.Open, FileAccess.Read))
                     {
-                        // 必须深拷贝一份图片，否则流关闭后图片会失效，或者被多线程占用
                         img = new Bitmap(Image.FromStream(fs));
-
-                        // 【修改点 2】 写入内存缓存时加锁
                         lock (_syncLock)
                         {
-                            if (!_memoryCache.ContainsKey(tileKey))
-                                _memoryCache[tileKey] = img;
+                            if (!_memoryCache.ContainsKey(tileKey)) _memoryCache[tileKey] = img;
                         }
                     }
                 }
-                catch { }
+                catch { } // 文件可能损坏
             }
 
-            // 如果磁盘也没有，下载
             if (img == null)
             {
                 DownloadTileAsync(layerType, z, r, c, localPath);
                 return;
             }
 
-            // 绘制图片
+            // 绘制
             if (img != null)
             {
                 double tileMinX = -180.0 + c * tileDeg;
@@ -124,22 +116,17 @@ namespace GIS2025
                 int width = Math.Abs(p2.X - p1.X) + 1;
                 int height = Math.Abs(p2.Y - p1.Y) + 1;
 
-                try
-                {
-                    // 这里的 img 虽然在内存里，但 Drawing 是线程安全的，只要不 dispose 就行
-                    g.DrawImage(img, p1.X, p1.Y, width, height);
-                }
-                catch { }
+                try { g.DrawImage(img, p1.X, p1.Y, width, height); } catch { }
             }
         }
+
+        // 静态标志位，防止弹窗弹个没完
+        private static bool _debugShown = false;
 
         private void DownloadTileAsync(string layerType, int z, int r, int c, string localPath)
         {
             string key = $"{layerType}_{z}_{r}_{c}";
 
-            // ==========================================
-            // 【修改点 3】 检查下载队列时加锁
-            // ==========================================
             lock (_syncLock)
             {
                 if (_downloading.Contains(key)) return;
@@ -152,27 +139,29 @@ namespace GIS2025
                 {
                     string url = string.Format(UrlTemplate, layerType, z, r, c, _apiKey);
 
-                    // 【新增调试代码】 
-                    // 如果是第一张瓦片，把 URL 复制到剪贴板并弹窗告诉你
-                    if (z == 1 || z == 2)
+                    // 【调试代码】只要没弹过窗，就弹一次，不限层级
+                    if (!_debugShown)
                     {
-                        System.Windows.Forms.Clipboard.SetText(url); // 复制到剪贴板
-                        System.Windows.Forms.MessageBox.Show("瓦片 URL 已复制到剪贴板：\n" + url);
+                        _debugShown = true; // 锁住，只弹一次
+                        System.Windows.Forms.Clipboard.SetText(url);
+                        System.Windows.Forms.MessageBox.Show("调试模式：已复制第一个瓦片URL到剪贴板！\n请去浏览器粘贴测试：\n" + url);
                     }
-
 
                     using (WebClient wc = new WebClient())
                     {
-                        wc.Headers.Add("User-Agent", "Mozilla/5.0");
+                        // 【关键修复 2】伪装浏览器 UA，否则 403 Forbidden
+                        wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+
                         byte[] data = wc.DownloadData(url);
 
                         using (MemoryStream ms = new MemoryStream(data))
                         {
-                            // 保存到磁盘
+                            // 【关键修复 3】验证是否为图片
+                            // 如果 Key 错误，天地图会返回一段 XML 文本，Image.FromStream 会抛异常，
+                            // 从而跳过下面的 Save，避免保存垃圾文件
                             Image img = Image.FromStream(ms);
                             img.Save(localPath);
 
-                            // 存入内存 (加锁)
                             lock (_syncLock)
                             {
                                 if (!_memoryCache.ContainsKey(key))
@@ -181,19 +170,13 @@ namespace GIS2025
                         }
                     }
                 }
-                catch
+                catch (Exception)
                 {
-                    // 下载失败忽略
+                    // 如果下载失败，可以 Console.WriteLine(ex.Message);
                 }
                 finally
                 {
-                    // ==========================================
-                    // 【修改点 4】 移除下载状态时加锁
-                    // ==========================================
-                    lock (_syncLock)
-                    {
-                        _downloading.Remove(key);
-                    }
+                    lock (_syncLock) { _downloading.Remove(key); }
                 }
             });
         }

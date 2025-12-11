@@ -33,7 +33,7 @@ namespace GIS2025
 
         // 在 FormMap 类中添加
         XWebTileLayer tiandituLayer;
-        System.Windows.Forms.Timer refreshTimer; // 用于刷新异步下载的瓦片
+        System.Windows.Forms.Timer refreshTimer;
 
         public FormMap()
         {
@@ -46,6 +46,15 @@ namespace GIS2025
 
             string myKey = "ded9721e66da88e4420647e0ef229c87"; // 比如 "7b...xx"
             tiandituLayer = new XWebTileLayer(myKey);
+
+            refreshTimer = new System.Windows.Forms.Timer();
+            refreshTimer.Interval = 800; // 0.8秒刷一次
+            refreshTimer.Tick += (s, e) => {
+                // 只有鼠标没在拖动时才刷新，防止闪烁
+                if (currentMouseAction == XExploreActions.noaction)
+                    UpdateMap();
+            };
+            refreshTimer.Start();
 
             _dataManager = new BusDataManager();
             _calculator = new JourneyCalculator(_dataManager);
