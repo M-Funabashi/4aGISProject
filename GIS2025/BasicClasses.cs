@@ -491,6 +491,35 @@ namespace XGIS
 
     public class XTools
     {
+
+
+
+        // 在 XTools 类中添加：
+
+        /// <summary>
+        /// 计算点 P 到线段 AB 的最近点 (投影点)
+        /// </summary>
+        public static XVertex GetClosestPointOnSegment(XVertex A, XVertex B, XVertex P)
+        {
+            XVertex AP = new XVertex(P.x - A.x, P.y - A.y);
+            XVertex AB = new XVertex(B.x - A.x, B.y - A.y);
+
+            double ab2 = AB.x * AB.x + AB.y * AB.y; // |AB|^2
+            if (ab2 == 0) return new XVertex(A.x, A.y); // A和B重合
+
+            double ap_ab = AP.x * AB.x + AP.y * AB.y; // Dot product
+            double t = ap_ab / ab2; // 投影系数
+
+            if (t < 0.0f) return new XVertex(A.x, A.y); // 最近点是 A
+            else if (t > 1.0f) return new XVertex(B.x, B.y); // 最近点是 B
+
+            // 最近点在线段中间
+            return new XVertex(A.x + AB.x * t, A.y + AB.y * t);
+        }
+
+
+
+
         //distance between Point C and segment AB
         public static double DistanceBetweenPointAndSegment(
             XVertex A, XVertex B, XVertex C)
@@ -1380,6 +1409,72 @@ namespace XGIS
             }
             return distance;
         }
+        // 在 XLineSpatial 类中添加：
+
+        /// <summary>
+        /// 获取点 P 到这条折线的最近点、所在的线段索引、以及距离
+        /// </summary>
+        public void GetClosestPointInfo(XVertex P, out XVertex closestPoint, out int segmentIndex, out double minDistance)
+        {
+            minDistance = double.MaxValue;
+            closestPoint = vertexes[0];
+            segmentIndex = 0;
+
+            for (int i = 0; i < vertexes.Count - 1; i++)
+            {
+                XVertex tempPoint = XTools.GetClosestPointOnSegment(vertexes[i], vertexes[i + 1], P);
+                double dist = P.Distance(tempPoint);
+
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    closestPoint = tempPoint;
+                    segmentIndex = i;
+                }
+            }
+        }
+
+
+
+        /// <summary>
+        /// 核心算法：截取从点 A 到点 B 之间的折线部分
+        /// </summary>
+        public XLineSpatial ExtractSection(XVertex userStart, XVertex userEnd)
+        {
+            // 1. 找到起点和终点在折线上的投影位置
+            GetClosestPointInfo(userStart, out XVertex pStartOnLine, out int idxStart, out double dist1);
+            GetClosestPointInfo(userEnd, out XVertex pEndOnLine, out int idxEnd, out double dist2);
+
+            // 2. 构造新的点序列
+            List<XVertex> newPoints = new List<XVertex>();
+            newPoints.Add(pStartOnLine); // 起点总是投影点
+
+            // 3. 判断截取方向
+            // 简单判断：根据索引大小。如果 idxStart < idxEnd，说明是顺着线序；反之是逆序。
+            // 注意：如果是同一段(idxStart == idxEnd)，要判断投影点在线段上的位置，这里简化处理，假设顺着画
+
+            if (idxStart <= idxEnd) // 顺向截取
+            {
+                // 把中间经过的所有原始拐点加进去
+                for (int k = idxStart + 1; k <= idxEnd; k++)
+                {
+                    newPoints.Add(vertexes[k]);
+                }
+            }
+            else // 逆向截取 (可能 Shapefile 画线方向和公交开行方向相反)
+            {
+                for (int k = idxStart; k > idxEnd; k--)
+                {
+                    newPoints.Add(vertexes[k]);
+                }
+            }
+
+            newPoints.Add(pEndOnLine); // 终点总是投影点
+
+            // 4. 返回新线
+            return new XLineSpatial(newPoints);
+        }
+
     }
 
     public class XPolygonSpatial : XSpatial

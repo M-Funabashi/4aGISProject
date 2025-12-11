@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using System.Windows.Forms;
 using XGIS;
 
@@ -13,293 +12,366 @@ namespace GIS2025
 {
     public partial class FormMap : Form
     {
-        //GIS数据库，虽然只有一个图层
-        XVectorLayer layer;
-
+        // ==========================================
+        // 核心变量
+        // ==========================================
         XView view = null;
-
         Bitmap backwindow;
+        XVectorLayer districtLayer;
+
+        // 使用 BindingList 管理所有行程
+        BindingList<TripArchiveItem> _tripHistory = new BindingList<TripArchiveItem>();
+
+        BusDataManager _dataManager;
+        JourneyCalculator _calculator;
 
         Point MouseDownLocation, MouseMovingLocation;
         XExploreActions currentMouseAction = XExploreActions.noaction;
+
+        // 右键菜单
+        ContextMenuStrip listContextMenu;
 
         public FormMap()
         {
             InitializeComponent();
             DoubleBuffered = true;
+            // 开启 Panel 双缓冲，防止闪烁
+            typeof(Panel).InvokeMember("DoubleBuffered",
+                BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                null, splitContainer1.Panel2, new object[] { true });
 
-            view = new XView(new XExtent(0,1,0,1), ClientRectangle);
+            _dataManager = new BusDataManager();
+            _calculator = new JourneyCalculator(_dataManager);
 
-            layer = new XVectorLayer("point_layer", SHAPETYPE.point);
-        }
-
-        private void FormMap_MouseClick(object sender, MouseEventArgs e)
-        {
-            //XVertex onevertex =view.ToMapVertex(e.Location);
-
-            //double mindistance = Double.MaxValue;
-            //int findid = -1;
-            //for (int i = 0; i <layer.FeatureCount(); i++)
-            //{
-            //    double distance = layer.GetFeature(i).Distance(onevertex);
-            //    if (distance < mindistance)
-            //    {
-            //        mindistance = distance;
-            //        findid = i;
-            //    }
-            //}
-
-            //XVertex anotherVertex = view.ToMapVertex(new Point(e.X+3, e.Y + 3));
-
-            //double minClickDistance=onevertex.Distance(anotherVertex);
-
-            //if (findid == -1)
-            //{
-            //    MessageBox.Show("先添加，再点击！");
-            //}
-            //else if (mindistance> minClickDistance)
-            //{
-            //    MessageBox.Show("太远了！");
-            //}
-            //else
-            //{
-            //    MessageBox.Show("找到了：" + layer.GetFeature(findid).getAttribute(0));
-            //}
-        }
-
-        private void UpdateMap()
-        {
-            //如果地图窗口被最小化了，就不用绘制了
-            if (ClientRectangle.Width==0|| ClientRectangle.Height == 0) return;
-            //更新view，以确保其地图窗口尺寸是正确的
-            view.UpdateMapWindow(ClientRectangle);
-            //如果背景窗口不为空，则先清除，回收内存资源
-            if (backwindow != null) backwindow.Dispose();
-            //根据最新的地图窗口尺寸建立背景窗口
-            backwindow = new Bitmap(ClientRectangle.Width, ClientRectangle.Height);
-            //在背景窗口上绘图
-            Graphics g = Graphics.FromImage(backwindow);
-            //清空窗口
-            g.FillRectangle(new SolidBrush(Color.Gray), ClientRectangle);
-            //g.Clear(Color.White);
-            //绘制空间对象
-            layer.LabelOrNot = checkBox1.Checked;
-            layer.draw(g, view);
-            //回收绘图工具
-            g.Dispose();
-            //重绘前景窗口
-            Invalidate();
-        }
-
-        private void bRefresh_Click(object sender, EventArgs e)
-        {
+            LoadBasemap();
+            LoadBusData();
+            InitRouteSearch();
+            InitTripList();
             UpdateMap();
         }
 
-        private void FormMap_SizeChanged(object sender, EventArgs e)
+        private void InitTripList()
         {
-            UpdateMap();
+            // 1. 绑定数据源
+            lstTrips.DataSource = _tripHistory;
+
+            // 2. 开启自定义格式化
+            lstTrips.FormattingEnabled = true;
+            lstTrips.Format += LstTrips_Format;
+
+            // 3. 开启拖拽支持
+            lstTrips.AllowDrop = true;
+            lstTrips.MouseDown += LstTrips_MouseDown;
+            lstTrips.DragOver += LstTrips_DragOver;
+            lstTrips.DragDrop += LstTrips_DragDrop;
+
+            // 4. 创建右键菜单
+            listContextMenu = new ContextMenuStrip();
+            ToolStripMenuItem itemDelete = new ToolStripMenuItem("删除选中 (Delete)");
+            itemDelete.Click += (s, e) => DeleteSelectedTrip();
+            ToolStripMenuItem itemClear = new ToolStripMenuItem("清空所有 (Clear All)");
+            itemClear.Click += (s, e) => ClearAllTrips();
+
+            listContextMenu.Items.Add(itemDelete);
+            listContextMenu.Items.Add(new ToolStripSeparator());
+            listContextMenu.Items.Add(itemClear);
+
+            lstTrips.ContextMenuStrip = listContextMenu;
+
+            // 列表变动时刷新地图
+            lstTrips.SelectedIndexChanged += (s, e) => UpdateMap();
         }
 
-        private void FormMap_MouseMove(object sender, MouseEventArgs e)
+        private void LstTrips_Format(object sender, ListControlConvertEventArgs e)
         {
-            XVertex mapVertex=view.ToMapVertex(e.Location);
-            string xy=mapVertex.x.ToString("f2")+","+mapVertex.y.ToString("f2");
-            labelXY.Text = xy;
-
-            MouseMovingLocation = e.Location;
-            if (currentMouseAction == XExploreActions.zoominbybox ||
-                currentMouseAction == XExploreActions.pan||
-                currentMouseAction == XExploreActions.select)
+            if (e.ListItem is TripArchiveItem item)
             {
-                Invalidate();
+                int index = _tripHistory.IndexOf(item) + 1; // 序号从1开始
+                e.Value = $"{index}. {item.RouteName} ({item.StartStop}-{item.EndStop})";
             }
         }
 
-        private void bFullExtent_Click(object sender, EventArgs e)
+        // ==========================================
+        // 【核心修改点 1】 修复右键菜单与拖拽冲突
+        // ==========================================
+        private void LstTrips_MouseDown(object sender, MouseEventArgs e)
         {
-            view.Update(
-                new XExtent(layer.Extent),
-                ClientRectangle);
-            UpdateMap();
-        }
-
-        private void FormMap_Paint(object sender, PaintEventArgs e)
-        {
-            if (backwindow == null) return;
-            if (currentMouseAction == XExploreActions.pan)
+            // 如果是右键：手动选中当前鼠标下的项，不触发拖拽
+            if (e.Button == MouseButtons.Right)
             {
-                e.Graphics.DrawImage(backwindow,
-                    MouseMovingLocation.X - MouseDownLocation.X,
-                    MouseMovingLocation.Y - MouseDownLocation.Y);
-            }
-            else if (currentMouseAction == XExploreActions.zoominbybox||
-                currentMouseAction == XExploreActions.select)
-            {
-                e.Graphics.DrawImage(backwindow, 0, 0);
-
-                int x = Math.Min(MouseDownLocation.X, MouseMovingLocation.X);
-                int y = Math.Min(MouseDownLocation.Y, MouseMovingLocation.Y);
-                int width = Math.Abs(MouseDownLocation.X - MouseMovingLocation.X);
-                int height = Math.Abs(MouseDownLocation.Y - MouseMovingLocation.Y);
-
-                e.Graphics.DrawRectangle(
-                    new Pen(new SolidBrush(Color.Red), 2), 
-                    x, y, width, height);
-            }
-            else
-            {
-                e.Graphics.DrawImage(backwindow, 0, 0);
-            }
-
-        }
-
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateMap();
-        }
-
-        private void FormMap_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button != MouseButtons.Left) return;
-            MouseDownLocation = e.Location;
-            if (Control.ModifierKeys == Keys.Shift)
-                currentMouseAction = XExploreActions.zoominbybox;
-            else if (Control.ModifierKeys == Keys.Alt ||
-                Control.ModifierKeys == (Keys.Alt | Keys.Control))
-                currentMouseAction = XExploreActions.select;
-            else
-                currentMouseAction = XExploreActions.pan;
-        }
-
-        private void FormMap_MouseUp(object sender, MouseEventArgs e)
-        {
-            XVertex v1 = view.ToMapVertex(MouseDownLocation);
-            XVertex v2 = view.ToMapVertex(e.Location);
-
-            if (MouseDownLocation == e.Location)
-            {
-                if (currentMouseAction == XExploreActions.select)  //现在是点选
+                int index = lstTrips.IndexFromPoint(e.Location);
+                if (index >= 0 && index < lstTrips.Items.Count)
                 {
-                    layer.SelectByVertex(v2,view.ToMapDistance(5),
-                            Control.ModifierKeys == (Keys.Alt | Keys.Control));
-                    UpdateMap();
+                    lstTrips.SelectedIndex = index;
                 }
+                return; // 直接返回，让 ContextMenu 正常弹出
+            }
 
-                currentMouseAction = XExploreActions.noaction;
+            // 如果是左键：才开始拖拽
+            if (e.Button == MouseButtons.Left)
+            {
+                if (lstTrips.SelectedItem == null) return;
+                lstTrips.DoDragDrop(lstTrips.SelectedIndex, DragDropEffects.Move);
+            }
+        }
+
+        private void LstTrips_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void LstTrips_DragDrop(object sender, DragEventArgs e)
+        {
+            Point point = lstTrips.PointToClient(new Point(e.X, e.Y));
+            int index = lstTrips.IndexFromPoint(point);
+            if (index < 0) index = _tripHistory.Count - 1;
+
+            int oldIndex = (int)e.Data.GetData(typeof(int));
+
+            if (oldIndex != index)
+            {
+                TripArchiveItem item = _tripHistory[oldIndex];
+                _tripHistory.RemoveAt(oldIndex);
+                _tripHistory.Insert(index, item);
+
+                lstTrips.SelectedIndex = index;
+                lstTrips.Invalidate();
+                UpdateMap();
+            }
+        }
+
+        private void DeleteSelectedTrip()
+        {
+            if (lstTrips.SelectedItem != null)
+            {
+                _tripHistory.Remove((TripArchiveItem)lstTrips.SelectedItem);
+                UpdateMap();
+            }
+        }
+
+        private void ClearAllTrips()
+        {
+            if (MessageBox.Show("确定要清空所有行程记录吗？", "确认", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                _tripHistory.Clear();
+                lblStats.Text = "记录已清空";
+                UpdateMap();
+            }
+        }
+
+        private void btnAddTrip_Click(object sender, EventArgs e)
+        {
+            if (cbStartStop.SelectedItem == null || cbEndStop.SelectedItem == null)
+            {
+                MessageBox.Show("请选择完整的起止站点！");
                 return;
             }
 
+            string route = cbRoutes.Text;
+            string dir = cbDirection.SelectedItem.ToString();
+            string start = cbStartStop.SelectedItem.ToString();
+            string end = cbEndStop.SelectedItem.ToString();
 
-            if (currentMouseAction == XExploreActions.zoominbybox)
+            XLineSpatial tripGeometry = _calculator.ReconstructTrip(route, dir, start, end);
+
+            if (tripGeometry != null)
             {
-                XExtent extent = new XExtent(v1, v2);
-                view.Update(extent, ClientRectangle);
+                var stats = _calculator.AnalyzeDistricts(tripGeometry, districtLayer);
+
+                string report = $"新增行程：{start} -> {end}\n";
+                foreach (var kvp in stats) report += $"{kvp.Key}: {kvp.Value}站 ";
+                lblStats.Text = report;
+
+                var newItem = new TripArchiveItem(route, start, end, tripGeometry);
+                _tripHistory.Add(newItem);
+
+                // 自动滚动到底部
+                lstTrips.SelectedIndex = _tripHistory.Count - 1;
+                UpdateMap();
             }
-            else if (currentMouseAction == XExploreActions.pan)
-            {
-                view.OffsetCenter(v1, v2);
-            }
-            else if (currentMouseAction == XExploreActions.select) //框选
-            {
-                XExtent extent = new XExtent(v1, v2);
-                layer.SelectByExtent(extent,
-                            Control.ModifierKeys == (Keys.Alt | Keys.Control));
-            }
-            currentMouseAction = XExploreActions.noaction;
-            UpdateMap();
         }
 
-        private void bReadShapefile_Click(object sender, EventArgs e)
+        // ==========================================
+        // 【核心修改点 2】 地图绘制：始终高亮最后一条
+        // ==========================================
+        private void UpdateMap()
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Shapfile|*.shp";
+            if (view == null || splitContainer1.Panel2.Width == 0) return;
 
+            view.UpdateMapWindow(splitContainer1.Panel2.ClientRectangle);
+            if (backwindow != null) backwindow.Dispose();
+            backwindow = new Bitmap(splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);
 
+            using (Graphics g = Graphics.FromImage(backwindow))
+            {
+                g.Clear(Color.White);
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
+                // 1. 画底图
+                if (districtLayer != null) districtLayer.draw(g, view);
 
+                // 2. 确定高亮对象：列表中的最后一个元素（序号最大的）
+                TripArchiveItem highlightItem = null;
+                if (_tripHistory.Count > 0)
+                {
+                    highlightItem = _tripHistory[_tripHistory.Count - 1];
+                }
 
+                // 3. 绘制行程
+                XThematic normalStyle = new XThematic();
+                normalStyle.LinePen = new Pen(Color.CornflowerBlue, 2);
 
-            if (dialog.ShowDialog() != DialogResult.OK) return;
+                // 先画背景层（所有非高亮的）
+                foreach (var item in _tripHistory)
+                {
+                    if (item != highlightItem)
+                    {
+                        item.Geometry.draw(g, view, normalStyle);
+                    }
+                }
 
+                // 后画高亮层（红粗线）
+                if (highlightItem != null)
+                {
+                    XThematic highlightStyle = new XThematic();
+                    highlightStyle.LinePen = new Pen(Color.Red, 4);
+                    highlightItem.Geometry.draw(g, view, highlightStyle);
 
-
-
-
-            layer = XShapefile.ReadShapefile(dialog.FileName);
-            layer.LabelOrNot = false;
-            view.Update(layer.Extent, ClientRectangle);
-            UpdateMap();
-
+                    // 画起终点
+                    var points = highlightItem.Geometry.vertexes;
+                    if (points.Count > 0)
+                    {
+                        Point pStart = view.ToScreenPoint(points[0]);
+                        Point pEnd = view.ToScreenPoint(points.Last());
+                        g.FillEllipse(Brushes.Green, pStart.X - 5, pStart.Y - 5, 10, 10);
+                        g.FillEllipse(Brushes.Red, pEnd.X - 5, pEnd.Y - 5, 10, 10);
+                    }
+                }
+            }
+            // 触发 Panel2 重绘
+            splitContainer1.Panel2.Invalidate();
         }
 
-        private void FormMap_MouseWheel(object sender, MouseEventArgs e)
+        // ==========================================
+        // 地图交互部分（保持之前的优化：双缓冲+偏移绘制）
+        // ==========================================
+        private void MapPanel_Paint(object sender, PaintEventArgs e)
         {
-            if (e.Delta>0)
+            if (backwindow == null) return;
+            if (currentMouseAction == XExploreActions.pan && MouseButtons == MouseButtons.Left)
             {
-                view.ChangeView(XExploreActions.zoomin);
+                int dx = MouseMovingLocation.X - MouseDownLocation.X;
+                int dy = MouseMovingLocation.Y - MouseDownLocation.Y;
+                e.Graphics.DrawImage(backwindow, dx, dy);
             }
             else
             {
-                view.ChangeView(XExploreActions.zoomout);
+                e.Graphics.DrawImage(backwindow, 0, 0);
             }
-            UpdateMap();
         }
 
-        private void bZoomIn_Click(object sender, EventArgs e)
+        private void MapPanel_MouseDown(object sender, MouseEventArgs e) { if (e.Button == MouseButtons.Left) { MouseDownLocation = e.Location; currentMouseAction = XExploreActions.pan; } }
+        private void MapPanel_MouseMove(object sender, MouseEventArgs e)
         {
-            view.ChangeView(XExploreActions.zoomin);
-            UpdateMap();
+            XVertex v = view.ToMapVertex(e.Location);
+            labelXY.Text = $"X: {v.x:F3}, Y: {v.y:F3}";
+            if (e.Button == MouseButtons.Left && currentMouseAction == XExploreActions.pan)
+            {
+                MouseMovingLocation = e.Location;
+                splitContainer1.Panel2.Invalidate();
+            }
+        }
+        private void MapPanel_MouseUp(object sender, MouseEventArgs e) { if (currentMouseAction == XExploreActions.pan) { view.OffsetCenter(view.ToMapVertex(MouseDownLocation), view.ToMapVertex(e.Location)); UpdateMap(); } currentMouseAction = XExploreActions.noaction; }
+        private void MapPanel_MouseWheel(object sender, MouseEventArgs e) { if (e.Delta > 0) view.ChangeView(XExploreActions.zoomin); else view.ChangeView(XExploreActions.zoomout); UpdateMap(); }
+
+        // 这里的 MapTools_Click 是通用的，请确保 Form1.Designer.cs 里全图按钮绑定的是这个事件
+        private void MapTools_Click(object sender, EventArgs e) { if (sender == bZoomIn) view.ChangeView(XExploreActions.zoomin); else if (sender == bZoomOut) view.ChangeView(XExploreActions.zoomout); else if (sender == bFullExtent && districtLayer != null) view.Update(districtLayer.Extent, splitContainer1.Panel2.ClientRectangle); UpdateMap(); }
+        private void MapPanel_SizeChanged(object sender, EventArgs e) { UpdateMap(); }
+
+        // ==========================================
+        // 杂项
+        // ==========================================
+        private void InitRouteSearch()
+        {
+            cbRoutes.DropDownStyle = ComboBoxStyle.DropDown;
+            cbRoutes.TextUpdate += CbRoutes_TextUpdate;
         }
 
-        private void bZoomOut_Click(object sender, EventArgs e)
+        private void CbRoutes_TextUpdate(object sender, EventArgs e)
         {
-            view.ChangeView(XExploreActions.zoomout);
-            UpdateMap();
+            string input = cbRoutes.Text;
+            if (input.Length < 2)
+            {
+                if (cbRoutes.Items.Count > 0)
+                {
+                    cbRoutes.Items.Clear();
+                    cbRoutes.DroppedDown = false;
+                    cbRoutes.SelectionStart = input.Length;
+                }
+                return;
+            }
+
+            var matches = _dataManager.AllRoutes
+                .Where(r => r.RouteName.Contains(input))
+                .Select(r => r.RouteName).Distinct().Take(20).ToArray();
+
+            cbRoutes.Items.Clear();
+            if (matches.Length > 0)
+            {
+                cbRoutes.Items.AddRange(matches);
+                cbRoutes.DroppedDown = true;
+            }
+            else
+            {
+                cbRoutes.DroppedDown = false;
+            }
+            cbRoutes.SelectionStart = input.Length;
         }
 
-        private void bOpenAttribute_Click(object sender, EventArgs e)
+        private void LoadBasemap()
         {
-            FormAttribute form = new FormAttribute(layer);
-            form.Show();
+            try
+            {
+                string shpPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "shanghai_district.shp");
+                if (File.Exists(shpPath))
+                {
+                    districtLayer = XShapefile.ReadShapefile(shpPath);
+                    districtLayer.LabelOrNot = false;
+                    districtLayer.UnselectedThematic = new XThematic(new Pen(Color.LightGray, 1), new Pen(Color.LightGray, 1), new SolidBrush(Color.WhiteSmoke), new Pen(Color.Black), new SolidBrush(Color.Black), 2);
+                    view = new XView(districtLayer.Extent, splitContainer1.Panel2.ClientRectangle);
+                }
+                else
+                {
+                    view = new XView(new XExtent(0, 100, 0, 100), splitContainer1.Panel2.ClientRectangle);
+                }
+            }
+            catch { }
         }
 
-        private void bReadMyFile_Click(object sender, EventArgs e)
+        private void LoadBusData() { _dataManager.LoadAllData(); }
+
+        private void cbRoutes_SelectedIndexChanged(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "myfile|*.gis";
-
-            if (dialog.ShowDialog() != DialogResult.OK) return;
-
-            layer = XMyFile.ReadFile(dialog.FileName);
-
-            view.Update(layer.Extent, ClientRectangle);
-            UpdateMap();
+            if (cbRoutes.SelectedItem == null) return;
+            cbDirection.Items.Clear(); cbStartStop.Items.Clear(); cbEndStop.Items.Clear();
+            string selectedRoute = cbRoutes.SelectedItem.ToString();
+            var directions = _dataManager.AllRoutes.Where(r => r.RouteName == selectedRoute).Select(r => r.Direction).ToList();
+            cbDirection.Items.AddRange(directions.ToArray());
+            if (cbDirection.Items.Count > 0) cbDirection.SelectedIndex = 0;
         }
 
-        private void bWriteMyFile_Click(object sender, EventArgs e)
+        private void cbDirection_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.Filter = "myfile|*.gis";
-
-            if (dialog.ShowDialog() != DialogResult.OK) return;
-
-            XMyFile.WriteFile(layer, dialog.FileName);
-        }
-
-        private void ExploreButton_Click(object sender, EventArgs e)
-        {
-            XExploreActions action= XExploreActions.zoomin;
-
-            if (sender == bZoomIn) action = XExploreActions.zoomin;
-            else if (sender == bZoomOut) action = XExploreActions.zoomout;
-            else if (sender == bMoveDown) action = XExploreActions.movedown;
-            else if (sender == bMoveLeft) action = XExploreActions.moveleft;
-            else if (sender == bMoveRight) action = XExploreActions.moveright;
-            else if (sender == bMoveUp) action = XExploreActions.moveup;
-
-            view.ChangeView(action);
-            UpdateMap();
+            cbStartStop.Items.Clear(); cbEndStop.Items.Clear();
+            if (cbRoutes.SelectedItem == null || cbDirection.SelectedItem == null) return;
+            string key = $"{cbRoutes.SelectedItem}_{cbDirection.SelectedItem}";
+            if (_dataManager.RoutePaths.ContainsKey(key))
+            {
+                List<string> stops = _dataManager.RoutePaths[key];
+                cbStartStop.Items.AddRange(stops.ToArray());
+                cbEndStop.Items.AddRange(stops.ToArray());
+                if (cbStartStop.Items.Count > 0) { cbStartStop.SelectedIndex = 0; cbEndStop.SelectedIndex = cbEndStop.Items.Count - 1; }
+            }
         }
     }
 }
