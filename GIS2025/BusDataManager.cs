@@ -205,7 +205,7 @@ namespace GIS2025
                 {
                     XFeature f = lineLayer.GetFeature(i);
 
-                    // 1. 【修改】使用你刚才找到的正确索引 (这里假设是 INDEX，请替换为你的数字)
+                    // 1. 【修改】使用你刚才找到的正确索引 (这里假设是 INDEX，请替换为你的数字)1
                     // 假如你发现名字在第 3 列，就写 getAttribute(3)
                     string rawName = f.getAttribute(0).ToString();
 
