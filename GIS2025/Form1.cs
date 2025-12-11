@@ -31,6 +31,10 @@ namespace GIS2025
         // 右键菜单
         ContextMenuStrip listContextMenu;
 
+        // 在 FormMap 类中添加
+        XWebTileLayer tiandituLayer;
+        System.Windows.Forms.Timer refreshTimer; // 用于刷新异步下载的瓦片
+
         public FormMap()
         {
             InitializeComponent();
@@ -40,14 +44,35 @@ namespace GIS2025
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, splitContainer1.Panel2, new object[] { true });
 
+            string myKey = "ded9721e66da88e4420647e0ef229c87"; // 比如 "7b...xx"
+            tiandituLayer = new XWebTileLayer(myKey);
+
             _dataManager = new BusDataManager();
             _calculator = new JourneyCalculator(_dataManager);
+
 
             LoadBasemap();
             LoadBusData();
             InitRouteSearch();
             InitTripList();
+
+            // 【新增】启动一个定时器，每秒刷新一次界面
+            // 作用：当后台瓦片下载完成后，界面能自动显示出来
+            refreshTimer = new System.Windows.Forms.Timer();
+            refreshTimer.Interval = 800;
+            refreshTimer.Tick += (s, e) => {
+                // 只有在没有进行鼠标操作时才刷新，避免干扰拖动
+                if (currentMouseAction == XExploreActions.noaction)
+                    UpdateMap();
+            };
+            refreshTimer.Start();
+
+
+
             UpdateMap();
+
+
+
         }
 
         private void InitTripList()
@@ -207,8 +232,28 @@ namespace GIS2025
                 g.Clear(Color.White);
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                // 1. 画底图
-                if (districtLayer != null) districtLayer.draw(g, view);
+                if (tiandituLayer != null)
+                {
+                    tiandituLayer.Draw(g, view);
+                }
+
+                // 2. 画行政区 (修改样式为透明填充)
+                if (districtLayer != null)
+                {
+                    // 临时修改样式：空心填充，灰色边框
+                    XThematic transparentStyle = new XThematic(
+                        new Pen(Color.Gray, 1),
+                        new Pen(Color.Gray, 2),
+                        new SolidBrush(Color.FromArgb(50, 200, 200, 200)), // 半透明灰色，或者 Color.Transparent
+                        new Pen(Color.Black), new SolidBrush(Color.Black), 2);
+
+                    // 强制使用这个透明样式绘制所有要素
+                    for (int i = 0; i < districtLayer.FeatureCount(); i++)
+                    {
+                        if (districtLayer.GetFeature(i).spatial.extent.IntersectOrNot(view.CurrentMapExtent))
+                            districtLayer.GetFeature(i).draw(g, view, false, 0, transparentStyle);
+                    }
+                }
 
                 // 2. 确定高亮对象：列表中的最后一个元素（序号最大的）
                 TripArchiveItem highlightItem = null;
@@ -249,7 +294,7 @@ namespace GIS2025
                 }
             }
             // 触发 Panel2 重绘
-            splitContainer1.Panel2.Invalidate();
+            try { splitContainer1.Panel2.Invalidate(); } catch { }
         }
 
         // ==========================================
