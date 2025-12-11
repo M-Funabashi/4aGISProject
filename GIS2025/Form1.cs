@@ -44,7 +44,7 @@ namespace GIS2025
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, splitContainer1.Panel2, new object[] { true });
 
-            string myKey = "ded9721e66da88e4420647e0ef229c87"; // 比如 "7b...xx"
+            string myKey = "52e398187b19acc51fec54eb09f085c1"; // 比如 "7b...xx"
             tiandituLayer = new XWebTileLayer(myKey);
 
             refreshTimer = new System.Windows.Forms.Timer();
@@ -251,9 +251,9 @@ namespace GIS2025
                 {
                     // 临时修改样式：空心填充，灰色边框
                     XThematic transparentStyle = new XThematic(
-                        new Pen(Color.Gray, 1),
-                        new Pen(Color.Gray, 2),
-                        new SolidBrush(Color.FromArgb(50, 200, 200, 200)), // 半透明灰色，或者 Color.Transparent
+                        new Pen(Color.FromArgb(100, 0, 20, 80), 1),
+                        new Pen(Color.FromArgb(100, 0, 20, 80), 1), // <--- 这里控制面要素的边框粗细
+                        new SolidBrush(Color.FromArgb(30, 200, 200, 200)), // 填充变得更透明一点(30)
                         new Pen(Color.Black), new SolidBrush(Color.Black), 2);
 
                     // 强制使用这个透明样式绘制所有要素
