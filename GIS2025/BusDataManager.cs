@@ -200,19 +200,24 @@ namespace GIS2025
             try
             {
                 XVectorLayer lineLayer = XShapefile.ReadShapefile(shpPath);
+
                 for (int i = 0; i < lineLayer.FeatureCount(); i++)
                 {
                     XFeature f = lineLayer.GetFeature(i);
-                    // 假设属性表第0列是线路名称 (如 "1路")
-                    // 你需要确认一下 shp 的属性表结构，如果是 "name" 字段最好
-                    string routeName = f.getAttribute(0).ToString();
+
+                    // 1. 【修改】使用你刚才找到的正确索引 (这里假设是 INDEX，请替换为你的数字)
+                    // 假如你发现名字在第 3 列，就写 getAttribute(3)
+                    string rawName = f.getAttribute(0).ToString();
+
+                    // 2. 【新增】名称清洗 (去除多余的空格、括号等，提高匹配率)
+                    // 这样 "1路(上行)" 和 "1路" 都能被识别为 "1路"
+                    string routeName = rawName.Split('(', '（')[0].Trim();
 
                     if (!RealRouteGeometries.ContainsKey(routeName))
                     {
                         RealRouteGeometries[routeName] = new List<XLineSpatial>();
                     }
 
-                    // 强转为线要素存入
                     if (f.spatial is XLineSpatial line)
                     {
                         RealRouteGeometries[routeName].Add(line);

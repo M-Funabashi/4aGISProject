@@ -558,7 +558,7 @@ namespace XGIS
                     break;
                 }
             }
-            return Encoding.GetEncoding("gb2312").GetString(byteArray, 0, count);
+            return Encoding.UTF8.GetString(byteArray, 0, count);
         }
 
         public static double CalculateArea(List<XVertex> _vertexes)
@@ -620,7 +620,7 @@ namespace XGIS
 
         public static void WriteString(string s, BinaryWriter bw)
         {
-            byte[] sbytes = Encoding.GetEncoding("gb2312").GetBytes(s);
+            byte[] sbytes = Encoding.UTF8.GetBytes(s);
             bw.Write(sbytes.Length);
             bw.Write(sbytes);
         }
@@ -629,7 +629,7 @@ namespace XGIS
         {
             int length = br.ReadInt32();
             byte[] sbytes = br.ReadBytes(length);
-            return Encoding.GetEncoding("gb2312").GetString(sbytes);
+            return Encoding.UTF8.GetString(sbytes);
         }
 
 

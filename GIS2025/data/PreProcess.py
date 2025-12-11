@@ -19,6 +19,25 @@ print("正在清洗数据 (剔除异常值 'D')...")
 # 剔除站点名称为 "D" 的行
 df_clean = df_raw[df_raw['站点名称'] != 'D'].copy()
 
+# ... (读取数据代码) ...
+
+# ==========================================
+# 【新增】 统一括号格式 (把全角括号替换为半角)
+# ==========================================
+def normalize_name(name):
+    if pd.isna(name): return name
+    # 替换中文括号为英文括号
+    name = str(name).replace('(', '（').replace(')', '）')
+    return name
+
+# 1. 清洗 Excel 数据 (route_stops 的来源)
+df_raw['站点名称'] = df_raw['站点名称'].apply(normalize_name)
+
+# 2. 清洗 Shapefile 数据 (stops_geo 的来源)
+gdf_stops['StationNam'] = gdf_stops['StationNam'].apply(normalize_name)
+
+# ... (后续代码保持不变) ...
+
 # ==========================================
 # 3. 生成线路-站点顺序表 (route_stops.csv)
 # ==========================================
