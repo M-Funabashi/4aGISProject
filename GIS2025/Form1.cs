@@ -13,7 +13,7 @@ namespace GIS2025
     public partial class FormMap : Form
     {
         // ==========================================
-        // 核心变量
+        // 核心变量1
         // ==========================================
         XView view = null;
         Bitmap backwindow;
