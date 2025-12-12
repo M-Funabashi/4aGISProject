@@ -173,7 +173,7 @@ namespace GIS2025
                             item.EndStop,
                             geometry
                         );
-
+                        tripItem.Length = geometry.length;
                         newArchive.Trips.Add(tripItem);
                         successCount++;
                     }

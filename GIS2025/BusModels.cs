@@ -60,6 +60,8 @@ public class TripArchiveItem
     public string StartStop { get; set; }
     public string EndStop { get; set; }
 
+    public double Length { get; set; } = 0;
+
     // 【关键修改】 Geometry 对象比较复杂，不适合直接存 JSON
     // 我们加一个 [JsonIgnore] 标签，让保存时忽略它
     [JsonIgnore]

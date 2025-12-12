@@ -509,38 +509,37 @@ namespace GIS2025
 
             if (tripGeometry != null && stats != null)
             {
-                // 【修复】直接使用最上面定义的 targetArchive，不要重新定义
-
                 // 创建行程对象
                 var newItem = new TripArchiveItem(route, dir, start, end, tripGeometry);
+
+                // ==========================================
+                // ★★★ 新增：计算里程并赋值 ★★★
+                // ==========================================
+                // tripGeometry.length 是底层 BasicClasses 计算的长度（单位：度）
+                // 粗略换算：1度 ≈ 111公里
+                double degreeLength = tripGeometry.length;
+                double kmLength = degreeLength * 111.0;
+
+                newItem.Length = Math.Round(kmLength, 2); // 保留2位小数
+                // ==========================================
 
                 // 加入档案
                 targetArchive.Trips.Add(newItem);
 
-                // 保存 (现在只存元数据，速度极快)
+                // 保存 (Length 属性会被自动写入 profiles.json)
                 ProfileManager.Instance.Save();
 
                 // 刷新界面
                 RefreshTree();
-                // ==========================================
-                // 【修改】 自动选中刚刚新建的行程
-                // ==========================================
                 SelectNodeByTag(newItem);
 
-                // 注意：SelectNodeByTag 设置 SelectedNode 后，
-                // 会自动触发 tvProfiles.AfterSelect 事件，从而调用 UpdateMap()。
-                // 所以这里不需要手动调用 UpdateMap() 了，避免重复刷新。
-
-                string report = $"行程：{start} -> {end}\n(共 {stats.Values.Sum()} 站)\n";
+                // 更新下方的状态栏文字，也显示单次里程
+                string report = $"行程：{start} -> {end}\n单次里程：{newItem.Length} km\n(共 {stats.Values.Sum()} 站)\n";
                 foreach (var kvp in stats)
                 {
                     report += $"{kvp.Key}: {kvp.Value}站 ";
                 }
                 lblStats.Text = report;
-            }
-            else
-            {
-                lblStats.Text = "路线生成失败，请检查数据完整性。";
             }
         }
 
@@ -617,25 +616,43 @@ namespace GIS2025
                 {
                     if (node.Tag is UserProfile u)
                     {
-                        // 选中用户：画该用户所有档案的所有行程
-                        foreach (var a in u.Archives) tripsToDraw.AddRange(a.Trips);
+                        // situation 1: 选中用户 -> 画该用户所有档案的所有行程
+                        foreach (var archive in u.Archives)
+                        {
+                            tripsToDraw.AddRange(archive.Trips); // ★★★ 这一句必须加回来！
+                        }
 
-                        // 选中用户时，更新头像显示
-                        if (File.Exists(u.AvatarPath)) pbAvatar.Image = Image.FromFile(u.AvatarPath);
-                        else pbAvatar.Image = null; // 默认图
+                        // 更新 UI
                         lblUserName.Text = u.Name;
+                        UpdateUserStats(u); // 你新增的统计
                     }
                     else if (node.Tag is DailyArchive a)
                     {
-                        // 选中档案：画该档案下的行程
-                        tripsToDraw.AddRange(a.Trips);
+                        // situation 2: 选中档案 -> 画该档案下的所有行程
+                        tripsToDraw.AddRange(a.Trips); // ★★★ 这一句必须加回来！
+
+                        // 更新 UI (找到父节点的用户进行统计)
+                        if (node.Parent != null && node.Parent.Tag is UserProfile parentUser)
+                        {
+                            UpdateUserStats(parentUser);
+                        }
                     }
                     else if (node.Tag is TripArchiveItem t)
                     {
-                        // 选中行程：高亮它，背景画同档案的其他行程
-                        highlightTrip = t;
-                        var parentArchive = node.Parent.Tag as DailyArchive;
-                        if (parentArchive != null) tripsToDraw.AddRange(parentArchive.Trips);
+                        // situation 3: 选中单条行程 -> 高亮它，并把同档案的其他行程作为背景
+                        highlightTrip = t; // ★★★ 标记高亮对象
+
+                        // 找到父档案，把里面的行程都加进去作为背景
+                        if (node.Parent != null && node.Parent.Tag is DailyArchive parentArchive)
+                        {
+                            tripsToDraw.AddRange(parentArchive.Trips); // ★★★ 这一句必须加回来！
+                        }
+
+                        // 更新 UI (找到爷爷节点的用户进行统计)
+                        if (node.Parent != null && node.Parent.Parent != null && node.Parent.Parent.Tag is UserProfile grandParentUser)
+                        {
+                            UpdateUserStats(grandParentUser);
+                        }
                     }
                 }
 
@@ -658,6 +675,40 @@ namespace GIS2025
             }
             try { splitContainer1.Panel2.Invalidate(); } catch { }
         }
+
+        // ==========================================
+        // ★★★ 新增：更新用户里程统计显示 ★★★
+        // ==========================================
+        private void UpdateUserStats(UserProfile user)
+        {
+            if (user == null)
+            {
+                // 如果没选中用户，只显示基础部分（防止文字残留）
+                if (lblUserName.Text.Contains("\n"))
+                    lblUserName.Text = lblUserName.Text.Split('\n')[0];
+                return;
+            }
+
+            double totalKm = 0;
+
+            // 遍历该用户下所有档案
+            foreach (var archive in user.Archives)
+            {
+                // 遍历档案下所有行程
+                foreach (var trip in archive.Trips)
+                {
+                    totalKm += trip.Length;
+                }
+            }
+
+            // 更新 UI (在用户名下方显示)
+            // 假设 lblUserName 初始只显示名字，我们用换行符追加里程
+            // 先获取纯名字部分（防止重复叠加）
+            string baseName = lblUserName.Text.Contains("\n") ? lblUserName.Text.Split('\n')[0] : user.Name;
+            lblUserName.Text = $"{baseName}\n累计里程：{totalKm:F2} km";
+        }
+
+
 
         // ... (以下辅助方法如 InitLoadingControl, LoadBasemap 等保持不变，参考上一个版本的代码即可) ...
         // 为了篇幅，这里不重复粘贴未修改的部分
