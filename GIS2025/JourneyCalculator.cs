@@ -106,34 +106,40 @@ namespace GIS2025
         /// <param name="tripLine">生成的轨迹线</param>
         /// <param name="districtLayer">行政区图层 (shanghai_district.shp)</param>
         /// <returns>字典：行政区名 -> 经过的站点数</returns>
-        public Dictionary<string, int> AnalyzeDistricts(XLineSpatial tripLine, XVectorLayer districtLayer)
+        public Dictionary<string, int> AnalyzeDistrictsByLogic(string routeName, string direction, string startStop, string endStop)
         {
             Dictionary<string, int> stats = new Dictionary<string, int>();
 
-            // 遍历轨迹上的每一个点（站点）
-            foreach (XVertex p in tripLine.vertexes)
+            string key = $"{routeName}_{direction}";
+
+            if (!_dataManager.RoutePaths.ContainsKey(key)) return stats;
+
+            List<string> allStops = _dataManager.RoutePaths[key];
+            int startIndex = allStops.IndexOf(startStop);
+            int endIndex = allStops.IndexOf(endStop);
+
+            if (startIndex == -1 || endIndex == -1 || startIndex > endIndex) return stats;
+
+            List<string> tripStopNames = allStops.GetRange(startIndex, endIndex - startIndex + 1);
+
+            foreach (string stopName in tripStopNames)
             {
-                // 遍历每一个行政区面
-                for (int i = 0; i < districtLayer.FeatureCount(); i++)
+                if (_dataManager.AllStops.ContainsKey(stopName))
                 {
-                    XFeature districtFeature = districtLayer.GetFeature(i);
+                    BusStop stop = _dataManager.AllStops[stopName];
 
-                    // 利用底层 Distance 方法判断点是否在面内
-                    // Distance <= 0 表示在面内或边界上
-                    if (districtFeature.spatial.Distance(p) <= 0)
-                    {
-                        // 获取行政区名称 (假设是第1个字段，根据你的shp实际情况调整)
-                        // 通常 shapfile 第一个字段是 Name
-                        string districtName = districtFeature.getAttribute(0).ToString();
+                    // ==========================================
+                    // 【修改】 统一使用“街道/乡镇”级别 (Street) 进行统计
+                    // ==========================================
+                    string region = stop.Street;
 
-                        if (stats.ContainsKey(districtName))
-                            stats[districtName]++;
-                        else
-                            stats[districtName] = 1;
+                    // 防止数据为空
+                    if (string.IsNullOrEmpty(region)) region = "未知乡镇";
 
-                        // 一个点只能属于一个区，找到后就可以跳出内层循环
-                        break;
-                    }
+                    if (stats.ContainsKey(region))
+                        stats[region]++;
+                    else
+                        stats[region] = 1;
                 }
             }
 

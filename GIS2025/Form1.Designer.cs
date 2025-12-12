@@ -2,36 +2,28 @@
 {
     partial class FormMap
     {
-        /// <summary>
-        /// 必需的设计器变量。
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// 清理所有正在使用的资源。
-        /// </summary>
-        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
+            if (disposing && (components != null)) components.Dispose();
             base.Dispose(disposing);
         }
 
         #region Windows 窗体设计器生成的代码
 
-        /// <summary>
-        /// 设计器支持所需的方法 - 不要修改
-        /// 使用代码编辑器修改此方法的内容。
-        /// </summary>
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tvProfiles = new System.Windows.Forms.TreeView();
-            this.cmsProfile = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.panelToolbar = new System.Windows.Forms.FlowLayoutPanel();
+            this.pbAddUser = new System.Windows.Forms.PictureBox();
+            this.pbAddArchive = new System.Windows.Forms.PictureBox();
+            this.pbImport = new System.Windows.Forms.PictureBox();
+            this.pbExport = new System.Windows.Forms.PictureBox();
+            this.pbAnalysis = new System.Windows.Forms.PictureBox();
+            this.pbDelete = new System.Windows.Forms.PictureBox();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblStats = new System.Windows.Forms.Label();
@@ -53,10 +45,18 @@
             this.bZoomOut = new System.Windows.Forms.Button();
             this.bZoomIn = new System.Windows.Forms.Button();
             this.bPan = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.panelToolbar.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pbAddUser)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbAddArchive)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbImport)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbExport)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbAnalysis)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbDelete)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.panelUser.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbAvatar)).BeginInit();
@@ -75,6 +75,7 @@
             // 
             this.splitContainer1.Panel1.BackColor = System.Drawing.Color.WhiteSmoke;
             this.splitContainer1.Panel1.Controls.Add(this.tvProfiles);
+            this.splitContainer1.Panel1.Controls.Add(this.panelToolbar);
             this.splitContainer1.Panel1.Controls.Add(this.label5);
             this.splitContainer1.Panel1.Controls.Add(this.groupBox1);
             this.splitContainer1.Panel1.Controls.Add(this.panelUser);
@@ -93,14 +94,12 @@
             this.splitContainer1.Panel2.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseWheel);
             this.splitContainer1.Size = new System.Drawing.Size(1445, 826);
             this.splitContainer1.SplitterDistance = 300;
-            this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 0;
             // 
             // tvProfiles
             // 
             this.tvProfiles.BackColor = System.Drawing.Color.White;
             this.tvProfiles.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tvProfiles.ContextMenuStrip = this.cmsProfile;
             this.tvProfiles.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tvProfiles.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tvProfiles.FullRowSelect = true;
@@ -110,14 +109,97 @@
             this.tvProfiles.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tvProfiles.Name = "tvProfiles";
             this.tvProfiles.ShowLines = false;
-            this.tvProfiles.Size = new System.Drawing.Size(274, 271);
+            this.tvProfiles.Size = new System.Drawing.Size(274, 221);
             this.tvProfiles.TabIndex = 3;
             // 
-            // cmsProfile
+            // panelToolbar
             // 
-            this.cmsProfile.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.cmsProfile.Name = "cmsProfile";
-            this.cmsProfile.Size = new System.Drawing.Size(61, 4);
+            this.panelToolbar.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.panelToolbar.Controls.Add(this.pbAddUser);
+            this.panelToolbar.Controls.Add(this.pbAddArchive);
+            this.panelToolbar.Controls.Add(this.pbImport);
+            this.panelToolbar.Controls.Add(this.pbExport);
+            this.panelToolbar.Controls.Add(this.pbAnalysis);
+            this.panelToolbar.Controls.Add(this.pbDelete);
+            this.panelToolbar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panelToolbar.Location = new System.Drawing.Point(13, 764);
+            this.panelToolbar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panelToolbar.Name = "panelToolbar";
+            this.panelToolbar.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
+            this.panelToolbar.Size = new System.Drawing.Size(274, 50);
+            this.panelToolbar.TabIndex = 5;
+            // 
+            // pbAddUser
+            // 
+            this.pbAddUser.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbAddUser.Location = new System.Drawing.Point(11, 10);
+            this.pbAddUser.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbAddUser.Name = "pbAddUser";
+            this.pbAddUser.Size = new System.Drawing.Size(32, 30);
+            this.pbAddUser.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbAddUser.TabIndex = 0;
+            this.pbAddUser.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbAddUser, "新建用户");
+            // 
+            // pbAddArchive
+            // 
+            this.pbAddArchive.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbAddArchive.Location = new System.Drawing.Point(60, 10);
+            this.pbAddArchive.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbAddArchive.Name = "pbAddArchive";
+            this.pbAddArchive.Size = new System.Drawing.Size(32, 30);
+            this.pbAddArchive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbAddArchive.TabIndex = 1;
+            this.pbAddArchive.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbAddArchive, "新建档案");
+            // 
+            // pbImport
+            // 
+            this.pbImport.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbImport.Location = new System.Drawing.Point(109, 10);
+            this.pbImport.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbImport.Name = "pbImport";
+            this.pbImport.Size = new System.Drawing.Size(32, 30);
+            this.pbImport.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbImport.TabIndex = 2;
+            this.pbImport.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbImport, "导入行程 (.trj)");
+            // 
+            // pbExport
+            // 
+            this.pbExport.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbExport.Location = new System.Drawing.Point(158, 10);
+            this.pbExport.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbExport.Name = "pbExport";
+            this.pbExport.Size = new System.Drawing.Size(32, 30);
+            this.pbExport.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbExport.TabIndex = 3;
+            this.pbExport.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbExport, "导出行程 (.trj)");
+            // 
+            // pbAnalysis
+            // 
+            this.pbAnalysis.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbAnalysis.Location = new System.Drawing.Point(207, 10);
+            this.pbAnalysis.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbAnalysis.Name = "pbAnalysis";
+            this.pbAnalysis.Size = new System.Drawing.Size(32, 30);
+            this.pbAnalysis.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbAnalysis.TabIndex = 4;
+            this.pbAnalysis.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbAnalysis, "开启/关闭 统计分析");
+            // 
+            // pbDelete
+            // 
+            this.pbDelete.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbDelete.Location = new System.Drawing.Point(11, 48);
+            this.pbDelete.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbDelete.Name = "pbDelete";
+            this.pbDelete.Size = new System.Drawing.Size(32, 30);
+            this.pbDelete.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbDelete.TabIndex = 5;
+            this.pbDelete.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbDelete, "删除选中项");
             // 
             // label5
             // 
@@ -314,7 +396,7 @@
             this.labelXY.AutoSize = true;
             this.labelXY.BackColor = System.Drawing.Color.Transparent;
             this.labelXY.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelXY.Location = new System.Drawing.Point(900, 788);
+            this.labelXY.Location = new System.Drawing.Point(901, 788);
             this.labelXY.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelXY.Name = "labelXY";
             this.labelXY.Size = new System.Drawing.Size(112, 18);
@@ -401,6 +483,13 @@
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.panelToolbar.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pbAddUser)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbAddArchive)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbImport)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbExport)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbAnalysis)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbDelete)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.panelUser.ResumeLayout(false);
@@ -436,6 +525,14 @@
         private System.Windows.Forms.Panel panelUser;
         private System.Windows.Forms.Label lblUserName;
         private System.Windows.Forms.PictureBox pbAvatar;
-        private System.Windows.Forms.ContextMenuStrip cmsProfile;
+        // 新增的底部工具栏相关控件
+        private System.Windows.Forms.FlowLayoutPanel panelToolbar;
+        private System.Windows.Forms.PictureBox pbAddUser;
+        private System.Windows.Forms.PictureBox pbAddArchive;
+        private System.Windows.Forms.PictureBox pbImport;
+        private System.Windows.Forms.PictureBox pbExport;
+        private System.Windows.Forms.PictureBox pbAnalysis;
+        private System.Windows.Forms.PictureBox pbDelete;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

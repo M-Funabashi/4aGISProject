@@ -68,20 +68,6 @@ public class TripArchiveItem
     // 【新增】 专门用于存取数据的“影子属性”
     // 保存时：把 Geometry 里的点取出来变成 List
     // 读取时：把 List 塞回去重建 XLineSpatial 对象
-    public List<XVertex> GeometryPoints
-    {
-        get
-        {
-            return Geometry?.vertexes;
-        }
-        set
-        {
-            if (value != null && value.Count > 0)
-            {
-                Geometry = new XLineSpatial(value);
-            }
-        }
-    }
 
     public TripArchiveItem() { } // 序列化需要无参构造函数
 

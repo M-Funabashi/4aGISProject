@@ -59,6 +59,32 @@ namespace GIS2025
             catch { }
         }
 
+        // 【新增】 启动时重建所有轨迹 (复活红线)
+        // 这个方法需要在 Form1 启动时调用，因为只有 Form1 才有 calculator
+        public void RestoreGeometries(JourneyCalculator calculator)
+        {
+            foreach (var user in Users)
+            {
+                foreach (var archive in user.Archives)
+                {
+                    foreach (var trip in archive.Trips)
+                    {
+                        // 如果内存里没有几何信息（刚读取完），就重新计算
+                        if (trip.Geometry == null)
+                        {
+                            trip.Geometry = calculator.ReconstructTrip(
+                                trip.RouteName,
+                                trip.Direction,
+                                trip.StartStop,
+                                trip.EndStop
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+
         public UserProfile GetOrCreateDefaultUser()
         {
             if (Users.Count == 0)
