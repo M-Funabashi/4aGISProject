@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using XGIS; // 引用你的底层 GIS 库
+using Newtonsoft.Json; // 【新增】
 
 namespace GIS2025
 {
@@ -55,22 +56,44 @@ namespace GIS2025
 public class TripArchiveItem
 {
     public string RouteName { get; set; }
+    public string Direction { get; set; }
     public string StartStop { get; set; }
     public string EndStop { get; set; }
 
-    // 核心：这条行程对应的地图线条
+    // 【关键修改】 Geometry 对象比较复杂，不适合直接存 JSON
+    // 我们加一个 [JsonIgnore] 标签，让保存时忽略它
+    [JsonIgnore]
     public XLineSpatial Geometry { get; set; }
 
-    // 构造函数
-    public TripArchiveItem(string route, string start, string end, XLineSpatial line)
+    // 【新增】 专门用于存取数据的“影子属性”
+    // 保存时：把 Geometry 里的点取出来变成 List
+    // 读取时：把 List 塞回去重建 XLineSpatial 对象
+    public List<XVertex> GeometryPoints
+    {
+        get
+        {
+            return Geometry?.vertexes;
+        }
+        set
+        {
+            if (value != null && value.Count > 0)
+            {
+                Geometry = new XLineSpatial(value);
+            }
+        }
+    }
+
+    public TripArchiveItem() { } // 序列化需要无参构造函数
+
+    public TripArchiveItem(string route, string dir, string start, string end, XLineSpatial line)
     {
         RouteName = route;
+        Direction = dir;
         StartStop = start;
         EndStop = end;
         Geometry = line;
     }
 
-    // 默认显示文本（作为备用，实际显示会被 Format 事件覆盖）
     public override string ToString()
     {
         return $"{RouteName}: {StartStop} -> {EndStop}";
