@@ -22,6 +22,7 @@ namespace GIS2025
             // 获取起止站点对象
             if (!_dataManager.AllStops.ContainsKey(startStop) || !_dataManager.AllStops.ContainsKey(endStop))
             {
+                //throw new Exception($"站点坐标缺失：找不到 {startStop} 或 {endStop} 的位置信息。");
                 MessageBox.Show("站点坐标缺失！");
                 return null;
             }
@@ -92,31 +93,56 @@ namespace GIS2025
         public Dictionary<string, int> AnalyzeDistrictsByLogic(string routeName, string direction, string startStop, string endStop)
         {
             Dictionary<string, int> stats = new Dictionary<string, int>();
+            string cleanRoute = routeName?.Trim();
+            string cleanDir = direction?.Trim();
+            string cleanStart = startStop?.Trim();
+            string cleanEnd = endStop?.Trim();
 
-            string key = $"{routeName}_{direction}";
+            string key = $"{cleanRoute}_{cleanDir}";
 
-            if (!_dataManager.RoutePaths.ContainsKey(key)) return stats;
+            if (!_dataManager.RoutePaths.ContainsKey(key))
+            {
+                var fuzzyKey = _dataManager.RoutePaths.Keys.FirstOrDefault(k =>
+                    k.Replace(" ", "").ToLower() == key.Replace(" ", "").ToLower());
 
+                if (fuzzyKey != null)
+                {
+                    key = fuzzyKey; 
+                }
+                else
+                {
+                    return stats; 
+                }
+            }
             List<string> allStops = _dataManager.RoutePaths[key];
-            int startIndex = allStops.IndexOf(startStop);
-            int endIndex = allStops.IndexOf(endStop);
+
+            int startIndex = allStops.FindIndex(s => s.Trim() == cleanStart);
+            int endIndex = allStops.FindIndex(s => s.Trim() == cleanEnd);
 
             if (startIndex == -1 || endIndex == -1 || startIndex > endIndex) return stats;
 
-            List<string> tripStopNames = allStops.GetRange(startIndex, endIndex - startIndex + 1);
-
-            foreach (string stopName in tripStopNames)
+            for (int i = startIndex; i <= endIndex; i++)
             {
+                string stopName = allStops[i].Trim();
+
+                BusStop stop = null;
                 if (_dataManager.AllStops.ContainsKey(stopName))
                 {
-                    BusStop stop = _dataManager.AllStops[stopName];
-                    string region = stop.Street;
-                    if (string.IsNullOrEmpty(region)) region = "未知乡镇";
+                    stop = _dataManager.AllStops[stopName];
+                }
+                else
+                {
+                    var fuzzyStopKey = _dataManager.AllStops.Keys.FirstOrDefault(k => k.Trim() == stopName);
+                    if (fuzzyStopKey != null) stop = _dataManager.AllStops[fuzzyStopKey];
+                }
 
-                    if (stats.ContainsKey(region))
-                        stats[region]++;
-                    else
-                        stats[region] = 1;
+                if (stop != null)
+                {
+                    string region = stop.Street;
+                    if (string.IsNullOrEmpty(region)) region = "未知区域";
+
+                    if (stats.ContainsKey(region)) stats[region]++;
+                    else stats[region] = 1;
                 }
             }
 

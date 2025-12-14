@@ -62,7 +62,7 @@ namespace GIS2025
                     string[] parts = line.Split(',');
                     if (parts.Length >= 5)
                     {
-                        string name = parts[0];
+                        string name = parts[0].Trim();
                         string district = parts[1];
                         string street = parts[2];
                         double x = double.Parse(parts[3]);
@@ -92,8 +92,8 @@ namespace GIS2025
                     {
                         BusRouteInfo info = new BusRouteInfo
                         {
-                            RouteName = parts[0],
-                            Direction = parts[1],
+                            RouteName = parts[0].Trim(),
+                            Direction = parts[1].Trim(),
                             StopCount = int.Parse(parts[2])
                         };
                         AllRoutes.Add(info);
@@ -115,9 +115,9 @@ namespace GIS2025
                     string[] parts = line.Split(',');
                     if (parts.Length >= 4)
                     {
-                        string routeName = parts[0];
-                        string direction = parts[1];
-                        string stopName = parts[3];
+                        string routeName = parts[0].Trim();
+                        string direction = parts[1].Trim();
+                        string stopName = parts[3].Trim();
                         string key = $"{routeName}_{direction}"; 
                         if (!RoutePaths.ContainsKey(key))
                         {
