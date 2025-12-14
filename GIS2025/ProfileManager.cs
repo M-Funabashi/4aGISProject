@@ -248,54 +248,6 @@ namespace GIS2025
             }
         }
 
-        /// <summary>
-        /// 重命名档案
-        /// </summary>
-        public bool RenameArchive(DailyArchive archive, string newName)
-        {
-            if (CurrentUser == null) return false;
-
-            // 1. 检查新名字有效性
-            string safeOldName = string.Join("_", archive.Name.Split(Path.GetInvalidFileNameChars()));
-            string safeNewName = string.Join("_", newName.Split(Path.GetInvalidFileNameChars()));
-
-            string userDir = Path.Combine(UserRootPath, CurrentUser.Name);
-            string oldPath = Path.Combine(userDir, safeOldName + ".trj");
-            string newPath = Path.Combine(userDir, safeNewName + ".trj");
-
-            if (!File.Exists(oldPath))
-            {
-                MessageBox.Show("原文件不存在！");
-                return false;
-            }
-
-            if (File.Exists(newPath))
-            {
-                MessageBox.Show("该名称已存在，请更换！");
-                return false;
-            }
-
-            try
-            {
-                // 2. 重命名物理文件
-                File.Move(oldPath, newPath);
-
-                // 3. 更新内存对象
-                archive.Name = newName; // 内存里的 Name 显示用原始字符串
-
-                // 4. 因为文件内容里的 Name 字段还是旧的，需要重新保存一次文件内容
-                // 这一步很重要，否则下次读出来还是旧名字
-                string json = JsonConvert.SerializeObject(archive, Formatting.Indented);
-                File.WriteAllText(newPath, json);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("重命名失败: " + ex.Message);
-                return false;
-            }
-        }
 
         // ==========================================
         // 3. 辅助功能
