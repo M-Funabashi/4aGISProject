@@ -682,7 +682,7 @@ namespace GIS2025
             if (tripGeometry != null && stats != null)
             {
                 var newItem = new TripArchiveItem(route, dir, start, end, tripGeometry);
-                newItem.Length = tripGeometry.length * 111000.0;
+                newItem.Length = tripGeometry.length;
 
                 targetArchive.Trips.Add(newItem);
 
@@ -811,13 +811,13 @@ namespace GIS2025
                     {
                         double archiveLen = 0;
                         foreach (var t in a.Trips) archiveLen += t.Length;
-                        lengthText = $"档案里程: {(archiveLen / 1000.0):F2} km"; // 米转公里
+                        lengthText = $"档案里程: {(archiveLen):F2} km"; // 米转公里
 
                         tripsToDraw.AddRange(a.Trips);
                     }
                     else if (node.Tag is TripArchiveItem t)
                     {
-                        lengthText = $"线路长度: {(t.Length / 1000.0):F2} km"; // 米转公里
+                        lengthText = $"线路长度: {(t.Length):F2} km"; // 米转公里
                         highlightTrip = t;
                         if (node.Parent?.Tag is DailyArchive pa) tripsToDraw.AddRange(pa.Trips);
                     }

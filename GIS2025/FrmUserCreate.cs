@@ -11,11 +11,29 @@ namespace GIS2025
         private FlowLayoutPanel flpAvatars;
         private Button btnConfirm;
         private string selectedAvatar = "ch_1.png"; // 默认头像
+        private UserProfile _editingUser = null;
 
         public FrmUserCreate()
         {
             InitializeCustomComponent();
             LoadAvatars();
+        }
+
+        public FrmUserCreate(UserProfile editUser = null)
+        {
+            _editingUser = editUser;
+            InitializeCustomComponent();
+            LoadAvatars();
+
+            // ★ 如果是编辑模式，初始化界面数据
+            if (_editingUser != null)
+            {
+                this.Text = "修改用户资料";
+                txtName.Text = _editingUser.Name;
+
+                // 提取文件名用于选中 (假设路径是 .../data/pic/chr/ch_1.png)
+                selectedAvatar = Path.GetFileName(_editingUser.AvatarPath);
+            }
         }
 
         private void InitializeCustomComponent()
@@ -45,7 +63,7 @@ namespace GIS2025
             // 3. 确定按钮
             btnConfirm = new Button
             {
-                Text = "立即创建",
+                Text = "确认",
                 Location = new Point(150, 340),
                 Size = new Size(180, 45),
                 Font = new Font("微软雅黑", 12, FontStyle.Bold),
@@ -105,24 +123,39 @@ namespace GIS2025
         private void BtnConfirm_Click(object sender, EventArgs e)
         {
             string name = txtName.Text.Trim();
-            if (string.IsNullOrEmpty(name))
-            {
-                MessageBox.Show("请输入用户名");
-                return;
-            }
+            if (string.IsNullOrEmpty(name)) { FrmActionBox.Show("请输入用户名", ActionType.Error); return; }
 
-            // 调用 Manager 创建用户
-            bool success = ProfileManager.Instance.CreateUser(name, selectedAvatar);
-            if (success)
+            bool success = false;
+
+            if (_editingUser == null)
             {
-                FrmActionBox.Show("创建成功", ActionType.Success);
-                this.DialogResult = DialogResult.OK; // 返回成功信号
-                this.Close();
+                // --- 新建模式 ---
+                success = ProfileManager.Instance.CreateUser(name, selectedAvatar);
+                if (!success) FrmActionBox.Show("用户已存在", ActionType.Error);
             }
             else
             {
-                //MessageBox.Show("用户已存在");
-                FrmActionBox.Show("同名用户已存在", ActionType.Error);
+                // --- 编辑模式 ---
+                // 如果名字没变且头像没变，直接关闭
+                string currentAvatarName = Path.GetFileName(_editingUser.AvatarPath);
+                if (name == _editingUser.Name && selectedAvatar == currentAvatarName)
+                {
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                    return;
+                }
+
+                success = ProfileManager.Instance.UpdateUser(_editingUser, name, selectedAvatar);
+                if (!success) FrmActionBox.Show("修改失败，可能用户名已存在或文件被占用。", ActionType.Error);
+            }
+
+            if (success)
+            {
+                if (_editingUser == null) FrmActionBox.Show("创建成功", ActionType.Success);
+                else FrmActionBox.Show("修改成功", ActionType.Success);
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
         }
     }

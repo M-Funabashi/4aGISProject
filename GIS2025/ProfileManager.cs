@@ -211,6 +211,44 @@ namespace GIS2025
             }
         }
 
+        /// <summary>
+        /// 更新用户信息（支持改名和换头像）
+        /// </summary>
+        public bool UpdateUser(UserProfile user, string newName, string newAvatarFileName)
+        {
+            try
+            {
+                // 1. 如果改名了，需要处理文件夹重命名
+                if (user.Name != newName)
+                {
+                    // 检查新名字是否冲突
+                    string newPath = Path.Combine(UserRootPath, newName);
+                    if (Directory.Exists(newPath)) return false; // 名字已存在
+
+                    // 执行文件夹重命名
+                    string oldPath = Path.Combine(UserRootPath, user.Name);
+                    Directory.Move(oldPath, newPath);
+
+                    // 更新内存中的名字
+                    user.Name = newName;
+                }
+
+                // 2. 更新头像路径
+                user.AvatarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "pic", "chr", newAvatarFileName);
+
+                // 3. 保存新的 info.json
+                SaveUserInfo(user); // 确保 SaveUserInfo 方法存在且可用
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show("更新失败：" + ex.Message);
+                return false;
+            }
+        }
+
+
         // ==========================================
         // 3. 辅助功能
         // ==========================================
@@ -241,7 +279,7 @@ namespace GIS2025
                         {
                             // ★ 修正：BasicClasses 计算的是度，乘以 111 才是 km
                             // 如果原来的代码写 111000 那是转成米，但 UI 显示的是 km
-                            trip.Length = trip.Geometry.length * 111.0;
+                            //trip.Length = trip.Geometry.length * 111.0;
                         }
                     }
                 }

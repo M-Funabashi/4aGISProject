@@ -1388,7 +1388,7 @@ namespace XGIS
 
         public XLineSpatial(List<XVertex> _vertexes) : base(_vertexes)
         {
-            length = XTools.CalculateLength(_vertexes);
+            length = XTools.CalculateLength(_vertexes) * 111.0;
         }
 
         public override void draw(Graphics graphics, XView view, XThematic thematic)

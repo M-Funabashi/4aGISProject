@@ -57,34 +57,43 @@ namespace GIS2025
             TableLayoutPanel tlpButtons = new TableLayoutPanel();
             tlpButtons.Dock = DockStyle.Fill;
             tlpButtons.RowCount = 2;
-            tlpButtons.ColumnCount = 3;
-            // 设置行高：第一行 55%，第二行 45%
+            tlpButtons.ColumnCount = 4;
+            // 设置行高
             tlpButtons.RowStyles.Add(new RowStyle(SizeType.Percent, 55F));
             tlpButtons.RowStyles.Add(new RowStyle(SizeType.Percent, 45F));
-            // 设置列宽：三等分
-            tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
 
-            // --- 第一行：加载用户 (独占整行) ---
+            // ★ 修改：设置列宽 (四等分 25%)
+            tlpButtons.ColumnStyles.Clear();
+            tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+
+            // --- 第一行：加载用户 (跨4列) ---
             Button btnLoad = CreateButton("🚀 进入手账 (加载用户)", Color.SeaGreen, Color.White);
             btnLoad.Click += BtnLoad_Click;
             tlpButtons.Controls.Add(btnLoad, 0, 0);
-            tlpButtons.SetColumnSpan(btnLoad, 3); // 跨3列
+            tlpButtons.SetColumnSpan(btnLoad, 4); // ★ 改为跨4列
 
-            // --- 第二行：功能按钮 ---
-            Button btnCreate = CreateButton("➕ 新建用户", Color.White, Color.Black);
+            // --- 第二行：功能按钮 (依次添加) ---
+            Button btnCreate = CreateButton("➕ 新建", Color.White, Color.Black); // 文字精简一点防拥挤
             btnCreate.Click += BtnCreate_Click;
 
-            Button btnOpenFolder = CreateButton("📂 打开文件夹", Color.White, Color.Black);
+            // ★ 新增：修改按钮
+            Button btnEdit = CreateButton("✏️ 修改", Color.White, Color.Black);
+            btnEdit.Click += BtnEdit_Click;
+
+            Button btnOpenFolder = CreateButton("📂 文件夹", Color.White, Color.Black);
             btnOpenFolder.Click += BtnOpenFolder_Click;
 
-            Button btnDelete = CreateButton("🗑️ 删除用户", Color.White, Color.DarkRed); // 文字深红示警
+            Button btnDelete = CreateButton("🗑️ 删除", Color.White, Color.DarkRed);
             btnDelete.Click += BtnDelete_Click;
 
+            // 按顺序加入面板
             tlpButtons.Controls.Add(btnCreate, 0, 1);
-            tlpButtons.Controls.Add(btnOpenFolder, 1, 1);
-            tlpButtons.Controls.Add(btnDelete, 2, 1);
+            tlpButtons.Controls.Add(btnEdit, 1, 1);      // 第二列
+            tlpButtons.Controls.Add(btnOpenFolder, 2, 1); // 第三列
+            tlpButtons.Controls.Add(btnDelete, 3, 1);     // 第四列
 
             pnlBottom.Controls.Add(tlpButtons);
 
@@ -263,6 +272,23 @@ namespace GIS2025
             FrmUserCreate frm = new FrmUserCreate();
             if (frm.ShowDialog() == DialogResult.OK)
             {
+                LoadUserList();
+            }
+        }
+
+        private void BtnEdit_Click(object sender, EventArgs e)
+        {
+            if (_selectedUser == null)
+            {
+                FrmActionBox.Show("请先选择一个要修改的用户！", ActionType.Error);
+                return;
+            }
+
+            // 传入当前选中用户，开启编辑模式
+            FrmUserCreate frm = new FrmUserCreate(_selectedUser);
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                // 修改完成后，刷新列表以显示新名字/新头像
                 LoadUserList();
             }
         }
