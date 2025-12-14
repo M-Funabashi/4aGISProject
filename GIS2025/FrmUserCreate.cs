@@ -10,7 +10,7 @@ namespace GIS2025
         private TextBox txtName;
         private FlowLayoutPanel flpAvatars;
         private Button btnConfirm;
-        private string selectedAvatar = "ch_1.png"; // 默认头像
+        private string selectedAvatar = "ch_1.png"; //默认头像
         private UserProfile _editingUser = null;
 
         public FrmUserCreate()
@@ -25,13 +25,12 @@ namespace GIS2025
             InitializeCustomComponent();
             LoadAvatars();
 
-            // ★ 如果是编辑模式，初始化界面数据
+            // 如果是编辑模式，初始化界面数据
             if (_editingUser != null)
             {
                 this.Text = "修改用户资料";
                 txtName.Text = _editingUser.Name;
-
-                // 提取文件名用于选中 (假设路径是 .../data/pic/chr/ch_1.png)
+                // 提取文件名用于选中
                 selectedAvatar = Path.GetFileName(_editingUser.AvatarPath);
             }
         }
@@ -45,11 +44,11 @@ namespace GIS2025
             this.MaximizeBox = false;
             this.MinimizeBox = false;
 
-            // 1. 输入名字区域
+            // 输入名字区域
             Label lblName = new Label { Text = "请输入用户名:", Location = new Point(20, 20), AutoSize = true, Font = new Font("微软雅黑", 10) };
             txtName = new TextBox { Location = new Point(20, 50), Width = 440, Font = new Font("微软雅黑", 12) };
 
-            // 2. 头像选择区域
+            // 头像选择区域
             Label lblAvatar = new Label { Text = "请选择头像:", Location = new Point(20, 90), AutoSize = true, Font = new Font("微软雅黑", 10) };
             flpAvatars = new FlowLayoutPanel
             {
@@ -60,7 +59,7 @@ namespace GIS2025
                 BackColor = Color.White
             };
 
-            // 3. 确定按钮
+            // 确定按钮
             btnConfirm = new Button
             {
                 Text = "确认",
@@ -83,9 +82,8 @@ namespace GIS2025
 
         private void LoadAvatars()
         {
-            // 假设头像在 data/pic/chr/ 目录下，命名为 ch_1.png 到 ch_10.png
             string avatarDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "pic", "chr");
-
+            // 加载头像图片
             for (int i = 1; i <= 10; i++)
             {
                 string fileName = $"ch_{i}.png";
@@ -98,7 +96,7 @@ namespace GIS2025
                     Size = new Size(60, 60),
                     SizeMode = PictureBoxSizeMode.Zoom,
                     Image = Image.FromFile(fullPath),
-                    Tag = fileName, // 存文件名
+                    Tag = fileName,
                     Cursor = Cursors.Hand,
                     Margin = new Padding(10),
                     BorderStyle = (fileName == selectedAvatar) ? BorderStyle.Fixed3D : BorderStyle.None // 默认选中第一个
@@ -129,13 +127,13 @@ namespace GIS2025
 
             if (_editingUser == null)
             {
-                // --- 新建模式 ---
+                // 新建模式
                 success = ProfileManager.Instance.CreateUser(name, selectedAvatar);
                 if (!success) FrmActionBox.Show("用户已存在", ActionType.Error);
             }
             else
             {
-                // --- 编辑模式 ---
+                // 编辑模式
                 // 如果名字没变且头像没变，直接关闭
                 string currentAvatarName = Path.GetFileName(_editingUser.AvatarPath);
                 if (name == _editingUser.Name && selectedAvatar == currentAvatarName)
@@ -146,7 +144,7 @@ namespace GIS2025
                 }
 
                 success = ProfileManager.Instance.UpdateUser(_editingUser, name, selectedAvatar);
-                if (!success) FrmActionBox.Show("修改失败，可能用户名已存在或文件被占用。", ActionType.Error);
+                if (!success) FrmActionBox.Show("修改失败，用户名已存在或文件被占用。", ActionType.Error);
             }
 
             if (success)

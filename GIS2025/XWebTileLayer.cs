@@ -4,7 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading;
-using System.Windows.Forms; // 必须引用
+using System.Windows.Forms; 
 using XGIS;
 
 namespace GIS2025
@@ -14,7 +14,6 @@ namespace GIS2025
         private string _apiKey;
         private string _cacheDir;
 
-        // URL 模板 (已修正为 t0)
         private const string UrlTemplate = "http://t0.tianditu.gov.cn/{0}_c/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={0}&STYLE=default&TILEMATRIXSET=c&FORMAT=tiles&TILEMATRIX={1}&TILEROW={2}&TILECOL={3}&tk={4}";
         //private const string UrlTemplate = "http://t0.tianditu.gov.cn/{0}_c/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={0}&STYLE=default&TILEMATRIXSET=c&FORMAT=tiles&TILEMATRIX={1}&TILEROW={2}&TILECOL={3}&tk={4}";
         private Dictionary<string, Image> _memoryCache = new Dictionary<string, Image>();
@@ -31,8 +30,6 @@ namespace GIS2025
             _apiKey = apiKey;
             _cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tile_cache");
             if (!Directory.Exists(_cacheDir)) Directory.CreateDirectory(_cacheDir);
-
-            // 强制 TLS 1.2
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         }
 
@@ -40,17 +37,14 @@ namespace GIS2025
         {
             if (!IsVisible) return;
 
-            // 调试弹窗 1：检查坐标 (只弹一次)
+            // 调试弹窗
             if (!_debugCoordShown)
             {
                 _debugCoordShown = true;
                 double minX = view.CurrentMapExtent.GetMinX();
                 double minY = view.CurrentMapExtent.GetMinY();
-                // 暂时注释掉坐标弹窗，以免干扰，如果你还需要看坐标，可以取消注释
                 // MessageBox.Show($"坐标检查:\nX: {minX}\nY: {minY}", "调试");
             }
-
-            // ... (计算层级和索引的代码与之前一致) ...
             double resolution = 1.0 / (view.ToScreenPoint(new XVertex(1, 0)).X - view.ToScreenPoint(new XVertex(0, 0)).X);
             int zoom = (int)Math.Round(Math.Log(1.40625 / resolution, 2));
             zoom = Math.Max(1, Math.Min(18, zoom));
@@ -143,9 +137,7 @@ namespace GIS2025
                     }
                 }
                 catch (Exception)
-                {
-                    // 默默失败，不报错
-                }
+                {}
                 finally
                 {
                     lock (_syncLock) { _downloading.Remove(key); }

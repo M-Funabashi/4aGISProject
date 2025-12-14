@@ -13,23 +13,23 @@ namespace GIS2025
 
         // 状态变量
         private UserProfile _selectedUser = null;
-        private Panel _selectedCard = null; // 当前高亮的卡片控件
+        private Panel _selectedCard = null;
 
         public FrmUserSelect()
         {
             InitializeCustomComponent();
-            LoadUserList(); // 启动时加载列表
+            LoadUserList(); //启动时加载列表
         }
 
         private void InitializeCustomComponent()
         {
             this.Text = "TransitLog - 欢迎页面";
-            this.Size = new Size(600, 550); // 稍微加高一点以容纳两行按钮
+            this.Size = new Size(600, 550); 
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
 
-            // 1. 标题
+            // 标题
             Label lblTitle = new Label
             {
                 Text = "请选择用户档案",
@@ -40,7 +40,7 @@ namespace GIS2025
                 ForeColor = Color.DimGray
             };
 
-            // 2. 用户列表容器
+            // 用户列表容器
             flpUsers = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -51,35 +51,31 @@ namespace GIS2025
             // 点击空白处取消选中
             flpUsers.Click += (s, e) => ClearSelection();
 
-            // 3. 底部按钮区域 (使用 TableLayoutPanel 布局)
+            // 底部按钮区域
             Panel pnlBottom = new Panel { Dock = DockStyle.Bottom, Height = 110, BackColor = Color.White, Padding = new Padding(10) };
 
             TableLayoutPanel tlpButtons = new TableLayoutPanel();
             tlpButtons.Dock = DockStyle.Fill;
             tlpButtons.RowCount = 2;
             tlpButtons.ColumnCount = 4;
-            // 设置行高
             tlpButtons.RowStyles.Add(new RowStyle(SizeType.Percent, 55F));
             tlpButtons.RowStyles.Add(new RowStyle(SizeType.Percent, 45F));
-
-            // ★ 修改：设置列宽 (四等分 25%)
             tlpButtons.ColumnStyles.Clear();
             tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
 
-            // --- 第一行：加载用户 (跨4列) ---
+            // 第一行：加载用户
             Button btnLoad = CreateButton("🚀 进入手账 (加载用户)", Color.SeaGreen, Color.White);
             btnLoad.Click += BtnLoad_Click;
             tlpButtons.Controls.Add(btnLoad, 0, 0);
             tlpButtons.SetColumnSpan(btnLoad, 4); // ★ 改为跨4列
 
-            // --- 第二行：功能按钮 (依次添加) ---
+            // 第二行：功能按钮
             Button btnCreate = CreateButton("➕ 新建", Color.White, Color.Black); // 文字精简一点防拥挤
             btnCreate.Click += BtnCreate_Click;
 
-            // ★ 新增：修改按钮
             Button btnEdit = CreateButton("✏️ 修改", Color.White, Color.Black);
             btnEdit.Click += BtnEdit_Click;
 
@@ -91,10 +87,9 @@ namespace GIS2025
 
             // 按顺序加入面板
             tlpButtons.Controls.Add(btnCreate, 0, 1);
-            tlpButtons.Controls.Add(btnEdit, 1, 1);      // 第二列
-            tlpButtons.Controls.Add(btnOpenFolder, 2, 1); // 第三列
-            tlpButtons.Controls.Add(btnDelete, 3, 1);     // 第四列
-
+            tlpButtons.Controls.Add(btnEdit, 1, 1);   
+            tlpButtons.Controls.Add(btnOpenFolder, 2, 1);
+            tlpButtons.Controls.Add(btnDelete, 3, 1);   
             pnlBottom.Controls.Add(tlpButtons);
 
             this.Controls.Add(flpUsers);
@@ -141,7 +136,7 @@ namespace GIS2025
             }
         }
 
-        // 创建单个用户卡片控件
+        // 创建单个用户卡片
         private Control CreateUserCard(UserProfile user)
         {
             Panel card = new Panel
@@ -150,8 +145,8 @@ namespace GIS2025
                 BackColor = Color.White,
                 Margin = new Padding(10),
                 Cursor = Cursors.Hand,
-                BorderStyle = BorderStyle.FixedSingle, // 默认边框
-                Tag = user // 绑定数据方便获取
+                BorderStyle = BorderStyle.FixedSingle, 
+                Tag = user
             };
 
             // 头像
@@ -190,15 +185,13 @@ namespace GIS2025
             card.Controls.Add(lblName);
             card.Controls.Add(lblDist);
 
-            // ==========================================
-            // ★ 点击选中逻辑
-            // ==========================================
+            // 点击选中逻辑
             card.Click += (s, e) =>
             {
                 SelectCard(card, user);
             };
 
-            // ★ 双击直接进入 (提升体验)
+            // 双击直接进入
             card.DoubleClick += (s, e) =>
             {
                 SelectCard(card, user);
@@ -211,22 +204,19 @@ namespace GIS2025
         // 处理卡片选中效果
         private void SelectCard(Panel card, UserProfile user)
         {
-            // 1. 还原上一个卡片的样式
+            // 还原上一个卡片的样式
             if (_selectedCard != null)
             {
                 _selectedCard.BackColor = Color.White;
                 _selectedCard.BorderStyle = BorderStyle.FixedSingle;
             }
 
-            // 2. 设置当前卡片为选中样式
+            // 设置当前卡片为选中样式
             _selectedUser = user;
             _selectedCard = card;
 
-            _selectedCard.BackColor = Color.AliceBlue; // 变浅蓝
-            _selectedCard.BorderStyle = BorderStyle.Fixed3D; // 变立体或换边框颜色
-
-            // 也可以加一个明显的边框色
-            // card.CreateGraphics()... (比较麻烦，简单变色即可)
+            _selectedCard.BackColor = Color.AliceBlue;
+            _selectedCard.BorderStyle = BorderStyle.Fixed3D; 
         }
 
         private void ClearSelection()
@@ -240,17 +230,14 @@ namespace GIS2025
             _selectedCard = null;
         }
 
-        // ==========================================
         // 按钮事件处理
-        // ==========================================
-
-        // 1. 加载用户
+        // 加载用户
         private void BtnLoad_Click(object sender, EventArgs e)
         {
             if (_selectedUser == null)
             {
                 //MessageBox.Show("请先点击选择一个用户！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                FrmActionBox.Show("请先选择一个用户！", ActionType.Error);
+                FrmActionBox.Show("请先选择一个用户！", ActionType.Error);  // 使用新的消息框
                 return;
             }
 
@@ -266,7 +253,7 @@ namespace GIS2025
             }
         }
 
-        // 2. 新建用户 (不需要选中)
+        // 新建用户
         private void BtnCreate_Click(object sender, EventArgs e)
         {
             FrmUserCreate frm = new FrmUserCreate();
@@ -288,12 +275,12 @@ namespace GIS2025
             FrmUserCreate frm = new FrmUserCreate(_selectedUser);
             if (frm.ShowDialog() == DialogResult.OK)
             {
-                // 修改完成后，刷新列表以显示新名字/新头像
+                // 修改完成后刷新列表以显示新用户
                 LoadUserList();
             }
         }
 
-        // 3. 打开文件夹
+        // 打开文件夹
         private void BtnOpenFolder_Click(object sender, EventArgs e)
         {
             if (_selectedUser == null)
@@ -336,17 +323,10 @@ namespace GIS2025
                     string userPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "user", _selectedUser.Name);
                     if (Directory.Exists(userPath)) Directory.Delete(userPath, true);
 
-                    // 内存移除 (使用 ProfileManager 里的 Users 列表)
-                    // 注意：这需要 ProfileManager 公开了 Users 列表，或者我们重新 Load 一遍来确保同步
-                    // 最好在 ProfileManager 里加一个 RemoveUser 方法，这里直接操作列表也可以
+                    // 内存移除
                     if (ProfileManager.Instance.Users.Contains(_selectedUser))
                     {
                         ProfileManager.Instance.Users.Remove(_selectedUser);
-                    }
-                    else
-                    {
-                        // 如果 Users 列表是每次 LoadUserList 生成的副本，我们需要从源头删除
-                        // 但 ProfileManager 目前是通过扫描文件夹加载的，所以只要文件夹删了，重新 Load 也就没了
                     }
 
                     // 刷新列表

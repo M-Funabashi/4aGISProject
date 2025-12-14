@@ -1,25 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json; // 【必须引用】用于标记 [JsonIgnore]
+using Newtonsoft.Json;
 using XGIS;
 
 namespace GIS2025
 {
-    /// <summary>
-    /// 用户配置文件 (对应 user/xxx/info.json)
-    /// </summary>
+    // 用户配置文件 info.json
     public class UserProfile
     {
         public string Name { get; set; }
         public string AvatarPath { get; set; }
-
-        // 【新增】累计里程缓存 (单位: km)
-        // 作用：登录界面只读 info.json 就能显示里程，不用去读那几十个行程文件，速度极快
+        // 登录界面只读 info.json显示里程
         public double TotalDistance { get; set; } = 0;
-
-        // 【关键修改】加上 [JsonIgnore] 标签
-        // 作用：保存 info.json 时，忽略 Archives 列表。
-        // Archives 列表现在由 ProfileManager 扫描文件夹里的 .trj 文件来动态填入。
         [JsonIgnore]
         public List<DailyArchive> Archives { get; set; } = new List<DailyArchive>();
 
@@ -48,10 +40,8 @@ namespace GIS2025
         }
     }
 
-    /// <summary>
-    /// 每日档案 (对应 user/xxx/档案名.trj)
-    /// 这个类基本没变，但它是被单独存成文件的
-    /// </summary>
+
+    // 每日档案 档案名.trj)
     public class DailyArchive
     {
         public string Name { get; set; }
@@ -63,6 +53,4 @@ namespace GIS2025
             Name = name;
         }
     }
-
-    // TripArchiveItem 类定义在 BusModels.cs 里，这里不需要动，保持引用即可
 }

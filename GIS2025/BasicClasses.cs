@@ -491,36 +491,25 @@ namespace XGIS
 
     public class XTools
     {
-
-
-
-        // 在 XTools 类中添加：
-
-        /// <summary>
-        /// 计算点 P 到线段 AB 的最近点 (投影点)
-        /// </summary>
+        // 计算点 P 到线段 AB 的最近点 (投影点)
         public static XVertex GetClosestPointOnSegment(XVertex A, XVertex B, XVertex P)
         {
             XVertex AP = new XVertex(P.x - A.x, P.y - A.y);
             XVertex AB = new XVertex(B.x - A.x, B.y - A.y);
 
-            double ab2 = AB.x * AB.x + AB.y * AB.y; // |AB|^2
-            if (ab2 == 0) return new XVertex(A.x, A.y); // A和B重合
+            double ab2 = AB.x * AB.x + AB.y * AB.y;
+            if (ab2 == 0) return new XVertex(A.x, A.y); 
 
-            double ap_ab = AP.x * AB.x + AP.y * AB.y; // Dot product
-            double t = ap_ab / ab2; // 投影系数
+            double ap_ab = AP.x * AB.x + AP.y * AB.y; 
+            double t = ap_ab / ab2;
 
-            if (t < 0.0f) return new XVertex(A.x, A.y); // 最近点是 A
-            else if (t > 1.0f) return new XVertex(B.x, B.y); // 最近点是 B
+            if (t < 0.0f) return new XVertex(A.x, A.y); 
+            else if (t > 1.0f) return new XVertex(B.x, B.y); 
 
             // 最近点在线段中间
             return new XVertex(A.x + AB.x * t, A.y + AB.y * t);
         }
 
-
-
-
-        //distance between Point C and segment AB
         public static double DistanceBetweenPointAndSegment(
             XVertex A, XVertex B, XVertex C)
         {
@@ -587,12 +576,6 @@ namespace XGIS
             return length;
         }
 
-        /// <summary>
-        /// 从文件中读取字节数组，根据输入的结构体定义，生成一个有内容的结构体实例
-        /// </summary>
-        /// <param name="br"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
         public static Object FromBytes2Struct(BinaryReader br, Type type)
         {
             byte[] buff = br.ReadBytes(Marshal.SizeOf(type));
@@ -631,13 +614,7 @@ namespace XGIS
             byte[] sbytes = br.ReadBytes(length);
             return Encoding.UTF8.GetString(sbytes);
         }
-
-
-
-
     }
-
-
 
     public class XVectorLayer
     {
@@ -666,7 +643,6 @@ namespace XGIS
         }
 
 
-
         public void SelectByVertex(XVertex vertex, double tolerance, bool modify)
         {
             List<XFeature> fs = XSelect.ToFeatures(
@@ -674,7 +650,6 @@ namespace XGIS
             ModifySelection(fs, modify);
         }
             
-        
 
         public void SelectByExtent(XExtent extent, bool modify)
         {
@@ -696,14 +671,14 @@ namespace XGIS
             {
                 if (!SelectedFeatures.Contains(feature))
                 {
-                    //情景2：添加入选择集
+                    //添加入选择集
                     IncludeAll = false;
                     SelectedFeatures.Add(feature);
                 }
             }
             if (IncludeAll)
             {
-                //情景1：从选择集中移出
+                //从选择集中移出
                 foreach (XFeature feature in features)
                 {
                     SelectedFeatures.Remove(feature);
@@ -989,10 +964,6 @@ namespace XGIS
             upRight=new XVertex(maxX, maxY);
         }
 
-        /// <summary>
-        /// copy extent from another one
-        /// </summary>
-        /// <param name="extent"></param>
         public XExtent(XExtent extent)
         {
             bottomLeft = new XVertex(extent.bottomLeft);
@@ -1309,10 +1280,6 @@ namespace XGIS
         public double x; 
         public double y;
 
-        /// <summary>
-        /// copy
-        /// </summary>
-        /// <param name="v"></param>
         public XVertex(XVertex v)
         {
             x= v.x;
@@ -1409,11 +1376,8 @@ namespace XGIS
             }
             return distance;
         }
-        // 在 XLineSpatial 类中添加：
 
-        /// <summary>
-        /// 获取点 P 到这条折线的最近点、所在的线段索引、以及距离
-        /// </summary>
+        // 获取点 P 到这条折线的最近点、所在的线段索引及距离
         public void GetClosestPointInfo(XVertex P, out XVertex closestPoint, out int segmentIndex, out double minDistance)
         {
             minDistance = double.MaxValue;
@@ -1434,24 +1398,19 @@ namespace XGIS
             }
         }
 
-
-
-        /// <summary>
-        /// 核心算法：截取从点 A 到点 B 之间的折线部分
-        /// </summary>
+        // 截取从点 A 到点 B 之间的折线部分
         public XLineSpatial ExtractSection(XVertex userStart, XVertex userEnd)
         {
-            // 1. 找到起点和终点在折线上的投影位置
+            // 找到起点和终点在折线上的投影位置
             GetClosestPointInfo(userStart, out XVertex pStartOnLine, out int idxStart, out double dist1);
             GetClosestPointInfo(userEnd, out XVertex pEndOnLine, out int idxEnd, out double dist2);
 
-            // 2. 构造新的点序列
+            // 构造新的点序列
             List<XVertex> newPoints = new List<XVertex>();
             newPoints.Add(pStartOnLine); // 起点总是投影点
 
-            // 3. 判断截取方向
+            // 判断截取方向
             // 简单判断：根据索引大小。如果 idxStart < idxEnd，说明是顺着线序；反之是逆序。
-            // 注意：如果是同一段(idxStart == idxEnd)，要判断投影点在线段上的位置，这里简化处理，假设顺着画
 
             if (idxStart <= idxEnd) // 顺向截取
             {
@@ -1461,7 +1420,7 @@ namespace XGIS
                     newPoints.Add(vertexes[k]);
                 }
             }
-            else // 逆向截取 (可能 Shapefile 画线方向和公交开行方向相反)
+            else // 逆向截取
             {
                 for (int k = idxStart; k > idxEnd; k--)
                 {
@@ -1471,7 +1430,7 @@ namespace XGIS
 
             newPoints.Add(pEndOnLine); // 终点总是投影点
 
-            // 4. 返回新线
+            // 返回新线
             return new XLineSpatial(newPoints);
         }
 
@@ -1511,13 +1470,7 @@ namespace XGIS
 
         }
 
-        /// <summary>
-        /// 判断一个点和一个多边形的关系，如果多边形包括点，则返回true，否则false
-        /// </summary>
-        /// <param name="vertex"></param>
-        /// <param name="inside">如果点在多边形的边线上，则为false，否则为true</param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+        // 判断一个点和一个多边形的关系，如果多边形包括点，则返回true，否则false
         private bool Contains(XVertex vertex, out bool inside)
         {
             //交点的数量

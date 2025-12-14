@@ -41,7 +41,10 @@
             this.panelUser = new System.Windows.Forms.Panel();
             this.lblUserName = new System.Windows.Forms.Label();
             this.pbAvatar = new System.Windows.Forms.PictureBox();
-            this.labelXY = new System.Windows.Forms.Label();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
             this.panelMapTools = new System.Windows.Forms.Panel();
             this.bFullExtent = new System.Windows.Forms.Button();
             this.bZoomOut = new System.Windows.Forms.Button();
@@ -64,6 +67,7 @@
             this.groupBox1.SuspendLayout();
             this.panelUser.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbAvatar)).BeginInit();
+            this.statusStrip1.SuspendLayout();
             this.panelMapTools.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -88,7 +92,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.BackColor = System.Drawing.Color.White;
-            this.splitContainer1.Panel2.Controls.Add(this.labelXY);
+            this.splitContainer1.Panel2.Controls.Add(this.statusStrip1);
             this.splitContainer1.Panel2.Controls.Add(this.panelMapTools);
             this.splitContainer1.Panel2.SizeChanged += new System.EventHandler(this.MapPanel_SizeChanged);
             this.splitContainer1.Panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.MapPanel_Paint);
@@ -417,18 +421,38 @@
             this.pbAvatar.TabIndex = 0;
             this.pbAvatar.TabStop = false;
             // 
-            // labelXY
+            // statusStrip1
             // 
-            this.labelXY.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelXY.AutoSize = true;
-            this.labelXY.BackColor = System.Drawing.Color.Transparent;
-            this.labelXY.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelXY.Location = new System.Drawing.Point(59, 943);
-            this.labelXY.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.labelXY.Name = "labelXY";
-            this.labelXY.Size = new System.Drawing.Size(140, 22);
-            this.labelXY.TabIndex = 1;
-            this.labelXY.Text = "X: 0.0, Y:0.0";
+            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel1,
+            this.toolStripStatusLabel2,
+            this.toolStripStatusLabel3});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 960);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(1293, 31);
+            this.statusStrip1.TabIndex = 2;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.AutoSize = false;
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(400, 24);
+            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            // 
+            // toolStripStatusLabel2
+            // 
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(195, 24);
+            this.toolStripStatusLabel2.Text = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // toolStripStatusLabel3
+            // 
+            this.toolStripStatusLabel3.Name = "toolStripStatusLabel3";
+            this.toolStripStatusLabel3.Size = new System.Drawing.Size(195, 24);
+            this.toolStripStatusLabel3.Text = "toolStripStatusLabel3";
             // 
             // panelMapTools
             // 
@@ -524,6 +548,8 @@
             this.panelUser.ResumeLayout(false);
             this.panelUser.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbAvatar)).EndInit();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.panelMapTools.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -544,7 +570,6 @@
         private System.Windows.Forms.Button btnAddTrip;
         private System.Windows.Forms.TreeView tvProfiles;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label labelXY;
         private System.Windows.Forms.Label lblStats;
         private System.Windows.Forms.Panel panelUser;
         private System.Windows.Forms.Label lblUserName;
@@ -565,5 +590,9 @@
         private System.Windows.Forms.Button bFullExtent;
         private System.Windows.Forms.Button bPan;
         private System.Windows.Forms.Button bZoomIn;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel3;
     }
 }
