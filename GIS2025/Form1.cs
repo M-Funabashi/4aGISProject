@@ -127,6 +127,15 @@ namespace GIS2025
             tvProfiles.AfterSelect += (s, e) => UpdateMap();
             // tvProfiles.NodeMouseClick += TvProfiles_NodeMouseClick; // 【移除】不需要右键选中了
 
+            tvProfiles.AllowDrop = true;
+
+            // 绑定拖拽事件
+            tvProfiles.ItemDrag += TvProfiles_ItemDrag;
+            tvProfiles.DragEnter += TvProfiles_DragEnter;
+            tvProfiles.DragOver += TvProfiles_DragOver; // 可选，增加视觉反馈
+            tvProfiles.DragDrop += TvProfiles_DragDrop;
+
+
             // 3. 【新增】初始化底部工具栏
             InitBottomToolbar();
 
@@ -190,6 +199,8 @@ namespace GIS2025
             LoadIcon(pbExport, "save.png");
             LoadIcon(pbAnalysis, "anal.png");
             LoadIcon(pbDelete, "delete.png");
+            LoadIcon(pbRename, "edit.png"); // 建议找一个编辑图标
+            LoadIcon(pbOpenRaw, "file.png");
 
             // 绑定事件 (确保这些逻辑还在)
             // 注意：这里用 SwitchUser() 替换了原来的 CreateNewUser()
@@ -348,7 +359,26 @@ namespace GIS2025
             // 1级节点：当前用户
             TreeNode userNode = new TreeNode(currentUser.Name);
             userNode.Tag = currentUser;
-            userNode.ImageKey = "user";
+            //userNode.ImageKey = "user";
+
+            var sortedArchives = currentUser.Archives.OrderBy(a => a.Name).ToList();
+
+            foreach (var archive in sortedArchives)
+            {
+                TreeNode archiveNode = new TreeNode(archive.Name);
+                archiveNode.Tag = archive;
+
+                // 行程保持列表原本顺序（因为我们要手动拖拽排序，不能自动排）
+                foreach (var trip in archive.Trips)
+                {
+                    TreeNode tripNode = new TreeNode($"{trip.RouteName} ({trip.StartStop}-{trip.EndStop})");
+                    tripNode.Tag = trip;
+                    archiveNode.Nodes.Add(tripNode);
+                }
+                userNode.Nodes.Add(archiveNode);
+            }
+            tvProfiles.Nodes.Add(userNode);
+            tvProfiles.ExpandAll();
 
             // 显示该用户下的所有档案
             foreach (var archive in currentUser.Archives)
@@ -404,6 +434,142 @@ namespace GIS2025
                 }
             }
         }
+
+        // 开始拖拽
+        private void TvProfiles_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            // 只有“行程”节点（第三级）允许被拖拽
+            TreeNode node = e.Item as TreeNode;
+            if (node != null && node.Tag is TripArchiveItem)
+            {
+                DoDragDrop(e.Item, DragDropEffects.Move);
+            }
+        }
+
+        // 拖拽进入
+        private void TvProfiles_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        // 拖拽悬停（用于自动展开或高亮，这里简单处理）
+        private void TvProfiles_DragOver(object sender, DragEventArgs e)
+        {
+            // 将屏幕坐标转换为树控件坐标
+            Point targetPoint = tvProfiles.PointToClient(new Point(e.X, e.Y));
+            TreeNode targetNode = tvProfiles.GetNodeAt(targetPoint);
+
+            // 只有当目标是同一个档案下的节点时，才允许放置
+            if (targetNode != null && targetNode.Tag is TripArchiveItem)
+            {
+                e.Effect = DragDropEffects.Move;
+                tvProfiles.SelectedNode = targetNode; // 视觉反馈
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        // 放置（核心逻辑）
+        private void TvProfiles_DragDrop(object sender, DragEventArgs e)
+        {
+            Point targetPoint = tvProfiles.PointToClient(new Point(e.X, e.Y));
+            TreeNode targetNode = tvProfiles.GetNodeAt(targetPoint);
+            TreeNode draggedNode = (TreeNode)e.Data.GetData(typeof(TreeNode));
+
+            // 1. 验证有效性：必须拖到同一个档案的行程上
+            if (draggedNode == null || targetNode == null) return;
+            if (draggedNode == targetNode) return;
+
+            // 确保都在同一层级（拥有同一个父节点）
+            if (draggedNode.Parent != targetNode.Parent) return;
+
+            DailyArchive parentArchive = draggedNode.Parent.Tag as DailyArchive;
+            TripArchiveItem draggedTrip = draggedNode.Tag as TripArchiveItem;
+            TripArchiveItem targetTrip = targetNode.Tag as TripArchiveItem;
+
+            if (parentArchive != null && draggedTrip != null && targetTrip != null)
+            {
+                // 2. 修改数据列表顺序
+                int oldIndex = parentArchive.Trips.IndexOf(draggedTrip);
+                int newIndex = parentArchive.Trips.IndexOf(targetTrip);
+
+                if (oldIndex != -1 && newIndex != -1)
+                {
+                    parentArchive.Trips.RemoveAt(oldIndex);
+                    parentArchive.Trips.Insert(newIndex, draggedTrip);
+
+                    // 3. 保存到文件 (写入新的顺序)
+                    ProfileManager.Instance.SaveArchive(parentArchive);
+
+                    // 4. 刷新界面
+                    RefreshTree();
+
+                    // 恢复选中状态
+                    SelectNodeByTag(draggedTrip);
+                }
+            }
+        }
+
+        // 重命名档案
+        private void PbRename_Click(object sender, EventArgs e)
+        {
+            DailyArchive archive = GetSelectedArchive();
+            if (archive == null)
+            {
+                FrmActionBox.Show("请先选择一个档案！", ActionType.Error);
+                return;
+            }
+
+            // 调用 VB 输入框 (需要引用 Microsoft.VisualBasic) 
+            // 或者你可以自己写一个小窗体
+            string newName = Microsoft.VisualBasic.Interaction.InputBox(
+                "请输入新的档案名称:", "重命名档案", archive.Name);
+
+            if (!string.IsNullOrWhiteSpace(newName) && newName != archive.Name)
+            {
+                if (ProfileManager.Instance.RenameArchive(archive, newName))
+                {
+                    RefreshTree();
+                    SelectNodeByTag(archive); // 重新选中
+                    FrmActionBox.Show("重命名成功", ActionType.Success);
+                }
+            }
+        }
+
+        // 打开原始数据文件
+        private void PbOpenRaw_Click(object sender, EventArgs e)
+        {
+            DailyArchive archive = GetSelectedArchive();
+            if (archive == null)
+            {
+                FrmActionBox.Show("请先选择一个档案！", ActionType.Error);
+                return;
+            }
+
+            var currentUser = ProfileManager.Instance.CurrentUser;
+            string safeName = string.Join("_", archive.Name.Split(Path.GetInvalidFileNameChars()));
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "user", currentUser.Name, safeName + ".trj");
+
+            if (File.Exists(path))
+            {
+                try
+                {
+                    // 调用系统默认编辑器打开 (通常是记事本)
+                    System.Diagnostics.Process.Start(path);
+                }
+                catch (Exception ex)
+                {
+                    FrmActionBox.Show("无法打开文件: " + ex.Message, ActionType.Error);
+                }
+            }
+            else
+            {
+                FrmActionBox.Show("文件未找到！", ActionType.Error);
+            }
+        }
+
 
 
         // ==========================================

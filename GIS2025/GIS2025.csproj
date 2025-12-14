@@ -259,6 +259,12 @@
     <Content Include="data\pic\icon\delete.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="data\pic\icon\edit.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="data\pic\icon\file.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="data\pic\icon\load.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

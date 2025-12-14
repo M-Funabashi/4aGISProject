@@ -24,6 +24,8 @@
             this.pbExport = new System.Windows.Forms.PictureBox();
             this.pbAnalysis = new System.Windows.Forms.PictureBox();
             this.pbDelete = new System.Windows.Forms.PictureBox();
+            this.pbRename = new System.Windows.Forms.PictureBox();
+            this.pbOpenRaw = new System.Windows.Forms.PictureBox();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblStats = new System.Windows.Forms.Label();
@@ -121,6 +123,8 @@
             this.panelToolbar.Controls.Add(this.pbExport);
             this.panelToolbar.Controls.Add(this.pbAnalysis);
             this.panelToolbar.Controls.Add(this.pbDelete);
+            this.panelToolbar.Controls.Add(this.pbRename);
+            this.panelToolbar.Controls.Add(this.pbOpenRaw);
             this.panelToolbar.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panelToolbar.Location = new System.Drawing.Point(13, 764);
             this.panelToolbar.Margin = new System.Windows.Forms.Padding(4);
@@ -200,6 +204,29 @@
             this.pbDelete.TabIndex = 5;
             this.pbDelete.TabStop = false;
             this.toolTip1.SetToolTip(this.pbDelete, "删除选中项");
+
+
+
+
+            ((System.ComponentModel.ISupportInitialize)(this.pbRename)).BeginInit();
+            this.pbRename.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbRename.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbRename.Name = "pbRename";
+            this.pbRename.Size = new System.Drawing.Size(32, 30);
+            this.pbRename.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbRename.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbRename, "重命名档案");
+
+
+
+            ((System.ComponentModel.ISupportInitialize)(this.pbOpenRaw)).BeginInit();
+            this.pbOpenRaw.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbOpenRaw.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbOpenRaw.Name = "pbOpenRaw";
+            this.pbOpenRaw.Size = new System.Drawing.Size(32, 30);
+            this.pbOpenRaw.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbOpenRaw.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbOpenRaw, "打开原始数据文件");
             // 
             // label5
             // 
@@ -489,6 +516,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbExport)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbAnalysis)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbDelete)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbRename)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbOpenRaw)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.panelUser.ResumeLayout(false);
@@ -527,6 +556,8 @@
         private System.Windows.Forms.PictureBox pbExport;
         private System.Windows.Forms.PictureBox pbAnalysis;
         private System.Windows.Forms.PictureBox pbDelete;
+        private System.Windows.Forms.PictureBox pbRename;
+        private System.Windows.Forms.PictureBox pbOpenRaw;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button bZoomOut;
         private System.Windows.Forms.Panel panelMapTools;
