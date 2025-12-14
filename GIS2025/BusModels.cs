@@ -46,44 +46,51 @@ namespace GIS2025
             return $"{RouteName}_{Direction}";
         }
     }
-}
 
-// 在 GIS2025 命名空间内，BusRouteInfo 类下方添加：
 
-/// <summary>
-/// 行程档案项：将显示信息与几何对象打包
-/// </summary>
-public class TripArchiveItem
-{
-    public string RouteName { get; set; }
-    public string Direction { get; set; }
-    public string StartStop { get; set; }
-    public string EndStop { get; set; }
 
-    public double Length { get; set; } = 0;
 
-    // 【关键修改】 Geometry 对象比较复杂，不适合直接存 JSON
-    // 我们加一个 [JsonIgnore] 标签，让保存时忽略它
-    [JsonIgnore]
-    public XLineSpatial Geometry { get; set; }
 
-    // 【新增】 专门用于存取数据的“影子属性”
-    // 保存时：把 Geometry 里的点取出来变成 List
-    // 读取时：把 List 塞回去重建 XLineSpatial 对象
 
-    public TripArchiveItem() { } // 序列化需要无参构造函数
 
-    public TripArchiveItem(string route, string dir, string start, string end, XLineSpatial line)
+
+    // 在 GIS2025 命名空间内，BusRouteInfo 类下方添加：
+
+    /// <summary>
+    /// 行程档案项：将显示信息与几何对象打包
+    /// </summary>
+    public class TripArchiveItem
     {
-        RouteName = route;
-        Direction = dir;
-        StartStop = start;
-        EndStop = end;
-        Geometry = line;
-    }
+        public string RouteName { get; set; }
+        public string Direction { get; set; }
+        public string StartStop { get; set; }
+        public string EndStop { get; set; }
 
-    public override string ToString()
-    {
-        return $"{RouteName}: {StartStop} -> {EndStop}";
+        public double Length { get; set; } = 0;
+
+        // 【关键修改】 Geometry 对象比较复杂，不适合直接存 JSON
+        // 我们加一个 [JsonIgnore] 标签，让保存时忽略它
+        [JsonIgnore]
+        public XLineSpatial Geometry { get; set; }
+
+        // 【新增】 专门用于存取数据的“影子属性”
+        // 保存时：把 Geometry 里的点取出来变成 List
+        // 读取时：把 List 塞回去重建 XLineSpatial 对象
+
+        public TripArchiveItem() { } // 序列化需要无参构造函数
+
+        public TripArchiveItem(string route, string dir, string start, string end, XLineSpatial line)
+        {
+            RouteName = route;
+            Direction = dir;
+            StartStop = start;
+            EndStop = end;
+            Geometry = line;
+        }
+
+        public override string ToString()
+        {
+            return $"{RouteName}: {StartStop} -> {EndStop}";
+        }
     }
 }

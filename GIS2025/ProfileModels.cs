@@ -1,68 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json; // 【必须引用】用于标记 [JsonIgnore]
+using XGIS;
 
 namespace GIS2025
 {
-    // ==========================================
-    // 1. 系统内部使用的运行时模型 (Runtime Models)
-    // ==========================================
-
     /// <summary>
-    /// 用户资料 (根节点)
+    /// 用户配置文件 (对应 user/xxx/info.json)
     /// </summary>
     public class UserProfile
     {
-        public string ID { get; set; } = Guid.NewGuid().ToString();
-        public string Name { get; set; } = "新用户";
-        public string AvatarPath { get; set; } // 头像本地路径
+        public string Name { get; set; }
+        public string AvatarPath { get; set; }
 
-        // 用户拥有的所有档案
+        // 【新增】累计里程缓存 (单位: km)
+        // 作用：登录界面只读 info.json 就能显示里程，不用去读那几十个行程文件，速度极快
+        public double TotalDistance { get; set; } = 0;
+
+        // 【关键修改】加上 [JsonIgnore] 标签
+        // 作用：保存 info.json 时，忽略 Archives 列表。
+        // Archives 列表现在由 ProfileManager 扫描文件夹里的 .trj 文件来动态填入。
+        [JsonIgnore]
         public List<DailyArchive> Archives { get; set; } = new List<DailyArchive>();
 
         public UserProfile() { }
-        public UserProfile(string name) { Name = name; }
+
+        public UserProfile(string name)
+        {
+            Name = name;
+        }
+
+        // 辅助方法：遍历内存中的行程，重新计算总里程
+        public double RecalculateTotalDistance()
+        {
+            double totalMeters = 0;
+            if (Archives != null)
+            {
+                foreach (var archive in Archives)
+                {
+                    foreach (var trip in archive.Trips)
+                    {
+                        totalMeters += trip.Length;
+                    }
+                }
+            }
+            return totalMeters / 1000.0;
+        }
     }
 
     /// <summary>
-    /// 每日档案 (二级节点)
+    /// 每日档案 (对应 user/xxx/档案名.trj)
+    /// 这个类基本没变，但它是被单独存成文件的
     /// </summary>
     public class DailyArchive
     {
-        public string ID { get; set; } = Guid.NewGuid().ToString();
         public string Name { get; set; }
-        public DateTime Date { get; set; } = DateTime.Now;
-
-        // 档案内的所有行程
         public List<TripArchiveItem> Trips { get; set; } = new List<TripArchiveItem>();
 
         public DailyArchive() { }
-        public DailyArchive(string name) { Name = name; }
+        public DailyArchive(string name)
+        {
+            Name = name;
+        }
     }
 
-    // ==========================================
-    // 2. .trj 文件专用模型 (用于导入导出)
-    // ==========================================
-
-    /// <summary>
-    /// .trj 文件根结构
-    /// </summary>
-    public class TrjFileModel
-    {
-        public string ArchiveName { get; set; } // 档案名
-        public DateTime CreateTime { get; set; } // 创建时间
-        public string Author { get; set; } // 作者(可选)
-        public List<TrjTripItem> Trips { get; set; } = new List<TrjTripItem>();
-    }
-
-    /// <summary>
-    /// .trj 单条行程记录 (只存元数据，不存坐标)
-    /// </summary>
-    public class TrjTripItem
-    {
-        public int Sequence { get; set; }
-        public string RouteName { get; set; } // 如 "1路"
-        public string Direction { get; set; } // 如 "上行"
-        public string StartStop { get; set; }
-        public string EndStop { get; set; }
-    }
+    // TripArchiveItem 类定义在 BusModels.cs 里，这里不需要动，保持引用即可
 }

@@ -139,7 +139,7 @@
             this.pbAddUser.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbAddUser.TabIndex = 0;
             this.pbAddUser.TabStop = false;
-            this.toolTip1.SetToolTip(this.pbAddUser, "新建用户");
+            this.toolTip1.SetToolTip(this.pbAddUser, "切换用户");
             // 
             // pbAddArchive
             // 
@@ -388,7 +388,6 @@
             this.pbAvatar.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbAvatar.TabIndex = 0;
             this.pbAvatar.TabStop = false;
-            this.pbAvatar.Click += new System.EventHandler(this.PbAvatar_Click);
             // 
             // labelXY
             // 
@@ -396,7 +395,7 @@
             this.labelXY.AutoSize = true;
             this.labelXY.BackColor = System.Drawing.Color.Transparent;
             this.labelXY.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelXY.Location = new System.Drawing.Point(901, 788);
+            this.labelXY.Location = new System.Drawing.Point(28, 786);
             this.labelXY.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelXY.Name = "labelXY";
             this.labelXY.Size = new System.Drawing.Size(112, 18);
@@ -413,7 +412,7 @@
             this.panelMapTools.Location = new System.Drawing.Point(27, 25);
             this.panelMapTools.Margin = new System.Windows.Forms.Padding(4);
             this.panelMapTools.Name = "panelMapTools";
-            this.panelMapTools.Size = new System.Drawing.Size(333, 50);
+            this.panelMapTools.Size = new System.Drawing.Size(291, 50);
             this.panelMapTools.TabIndex = 0;
             // 
             // bFullExtent
@@ -515,11 +514,6 @@
         private System.Windows.Forms.Button btnAddTrip;
         private System.Windows.Forms.TreeView tvProfiles;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Panel panelMapTools;
-        private System.Windows.Forms.Button bZoomIn;
-        private System.Windows.Forms.Button bZoomOut;
-        private System.Windows.Forms.Button bPan;
-        private System.Windows.Forms.Button bFullExtent;
         private System.Windows.Forms.Label labelXY;
         private System.Windows.Forms.Label lblStats;
         private System.Windows.Forms.Panel panelUser;
@@ -534,5 +528,10 @@
         private System.Windows.Forms.PictureBox pbAnalysis;
         private System.Windows.Forms.PictureBox pbDelete;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button bZoomOut;
+        private System.Windows.Forms.Panel panelMapTools;
+        private System.Windows.Forms.Button bFullExtent;
+        private System.Windows.Forms.Button bPan;
+        private System.Windows.Forms.Button bZoomIn;
     }
 }

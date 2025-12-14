@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -22,6 +23,7 @@ namespace GIS2025
         XWebTileLayer tiandituLayer;
         System.Windows.Forms.Timer refreshTimer;
         bool _isHeatmapEnabled = false; // 开关状态
+
         Dictionary<string, int> _heatmapStats = null; // 统计结果缓存 (行政区名 -> 次数)
 
         // 交互状态
@@ -33,17 +35,20 @@ namespace GIS2025
         // private PictureBox pbAvatar;
         // private ContextMenuStrip cmsProfile;
         PictureBox pbLoading;
+        private Label lblAnalysisInfo;
+        private Label lblLengthInfo;
+        private FrmStatsReport _currentReportForm = null; // ★ 用来记录当前的报告窗口
 
         public FormMap()
         {
             InitializeComponent();
             DoubleBuffered = true;
-            // 双缓冲
+            // 双缓冲设置保持不变...
             typeof(Panel).InvokeMember("DoubleBuffered",
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, splitContainer1.Panel2, new object[] { true });
 
-            string myKey = "ded9721e66da88e4420647e0ef229c87";
+            string myKey = "52e398187b19acc51fec54eb09f085c1";
             tiandituLayer = new XWebTileLayer(myKey);
 
             _dataManager = new BusDataManager();
@@ -53,21 +58,56 @@ namespace GIS2025
             LoadBusData();
             InitRouteSearch();
             InitLoadingControl();
+            InitStatusLabels();
 
-            ProfileManager.Instance.Load();
-            // 【新增】 恢复所有历史行程的红线 (这一步可能需要几秒，最好也做个Loading，这里暂且同步执行)
-            ProfileManager.Instance.RestoreGeometries(_calculator);
-
-            ProfileManager.Instance.GetOrCreateDefaultUser();
+            if (ProfileManager.Instance.CurrentUser != null)
+            {
+                ProfileManager.Instance.RestoreGeometries(_calculator);
+            }
 
             InitProfileUI();
 
+            // Timer 设置保持不变...
             refreshTimer = new System.Windows.Forms.Timer();
             refreshTimer.Interval = 800;
             refreshTimer.Tick += (s, e) => { if (currentMouseAction == XExploreActions.noaction) UpdateMap(); };
             refreshTimer.Start();
 
             UpdateMap();
+        }
+
+        // 【新增】初始化标签的方法
+        private void InitStatusLabels()
+        {
+            // 1. 长度信息标签
+            lblLengthInfo = new Label();
+            lblLengthInfo.AutoSize = true;
+            lblLengthInfo.BackColor = Color.Transparent; // 透明背景
+            lblLengthInfo.ForeColor = Color.DarkSlateGray;
+            lblLengthInfo.Font = new Font("微软雅黑", 10, FontStyle.Bold);
+            lblLengthInfo.Anchor = AnchorStyles.Bottom | AnchorStyles.Right; // 锚定右下角
+                                                                             // 初始位置 (假设 labelXY 在右下角，我们往左放一点)
+            lblLengthInfo.Location = new Point(splitContainer1.Panel2.Width - 300, splitContainer1.Panel2.Height - 25);
+            lblLengthInfo.Text = "准备就绪";
+
+            // 2. 统计分析提示标签
+            lblAnalysisInfo = new Label();
+            lblAnalysisInfo.AutoSize = true;
+            lblAnalysisInfo.BackColor = Color.FromArgb(200, 255, 255, 255); // 半透明白色背景，防止看不清
+            lblAnalysisInfo.ForeColor = Color.Blue;
+            lblAnalysisInfo.Font = new Font("微软雅黑", 9, FontStyle.Regular);
+            lblAnalysisInfo.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            lblAnalysisInfo.Location = new Point(splitContainer1.Panel2.Width - 300, splitContainer1.Panel2.Height - 45);
+            lblAnalysisInfo.Text = "";
+            lblAnalysisInfo.Visible = false; // 默认隐藏，开启热力图时显示
+
+            // 加入到地图面板 (Panel2)
+            splitContainer1.Panel2.Controls.Add(lblLengthInfo);
+            splitContainer1.Panel2.Controls.Add(lblAnalysisInfo);
+
+            // 确保它们在最上层
+            lblLengthInfo.BringToFront();
+            lblAnalysisInfo.BringToFront();
         }
 
         // ==========================================
@@ -77,8 +117,8 @@ namespace GIS2025
         {
             // 1. 设置头像框
             pbAvatar.SizeMode = PictureBoxSizeMode.Zoom;
-            pbAvatar.Cursor = Cursors.Hand;
-            pbAvatar.Click += PbAvatar_Click;
+            pbAvatar.Cursor = Cursors.Default;
+            //pbAvatar.Click += PbAvatar_Click;
             pbAvatar.BorderStyle = BorderStyle.FixedSingle;
 
             // 2. 设置 TreeView
@@ -93,7 +133,7 @@ namespace GIS2025
             RefreshTree();
 
             // 5. 自动选中
-            var lastUser = ProfileManager.Instance.Users.LastOrDefault();
+            /*var lastUser = ProfileManager.Instance.Users.LastOrDefault();
             if (lastUser != null)
             {
                 object target = lastUser;
@@ -106,26 +146,44 @@ namespace GIS2025
                 }
                 SelectNodeByTag(target);
             }
+            */
+            if (ProfileManager.Instance.CurrentUser != null)
+            {
+                SelectNodeByTag(ProfileManager.Instance.CurrentUser);
+            }
         }
 
         private void InitBottomToolbar()
         {
-            // 辅助函数：安全加载图片
+            // 辅助函数：更智能的图片加载
             void LoadIcon(PictureBox pb, string fileName)
             {
+                // 1. 强制设置显示模式为缩放，防止图片太大只显示一部分导致“隐形”
+                pb.SizeMode = PictureBoxSizeMode.Zoom;
+                pb.BackColor = Color.Transparent;
+
+                // 2. 尝试寻找路径 (兼容 Debug 模式和发布模式)
+                // 优先找 bin/Debug/data/pic/icon
                 string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "pic", "icon", fileName);
+
+                // 如果找不到，尝试去项目源码目录找 (防止你忘了复制 data 文件夹)
+                if (!File.Exists(path))
+                {
+                    path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\data\pic\icon", fileName);
+                }
+
                 if (File.Exists(path))
                 {
                     pb.Image = Image.FromFile(path);
                 }
                 else
                 {
-                    // 如果找不到图片，给个背景色示意一下
-                    pb.BackColor = Color.LightGray;
+                    // 如果真的找不到，给一个显眼的颜色提示
+                    pb.BackColor = Color.Red;
                 }
             }
 
-            // 1. 加载图片 (请确保文件名一致)
+            // 加载图片
             LoadIcon(pbAddUser, "add_user.png");
             LoadIcon(pbAddArchive, "add_route.png");
             LoadIcon(pbImport, "load.png");
@@ -133,18 +191,19 @@ namespace GIS2025
             LoadIcon(pbAnalysis, "anal.png");
             LoadIcon(pbDelete, "delete.png");
 
-            // 2. 绑定点击事件 (复用之前的逻辑方法)
-            pbAddUser.Click += (s, e) => CreateNewUser();
+            // 绑定事件 (确保这些逻辑还在)
+            // 注意：这里用 SwitchUser() 替换了原来的 CreateNewUser()
+            pbAddUser.Click -= null; // 防止重复绑定
+            pbAddUser.Click += (s, e) => SwitchUser();
+
             pbAddArchive.Click += (s, e) => CreateNewArchive();
             pbImport.Click += (s, e) => ImportTrj_Click();
             pbExport.Click += (s, e) => ExportTrj_Click();
             pbDelete.Click += (s, e) => DeleteCurrentNode();
-
-            // 统计分析按钮需要特殊处理 (状态切换)
             pbAnalysis.Click += ToggleHeatmap_Click;
         }
 
-
+        /*
         // 点击开关时
         private void ToggleHeatmap_Click(object sender, EventArgs e)
         {
@@ -157,6 +216,7 @@ namespace GIS2025
                 // 【UI 反馈】 按钮背景恢复透明
                 pbAnalysis.BackColor = Color.Transparent;
                 pbAnalysis.BorderStyle = BorderStyle.None;
+                if (lblAnalysisInfo != null) lblAnalysisInfo.Visible = false;
             }
             else
             {
@@ -175,39 +235,138 @@ namespace GIS2025
                 // 【UI 反馈】 按钮背景变色，表示“按下/激活”状态
                 pbAnalysis.BackColor = Color.LightSkyBlue;
                 pbAnalysis.BorderStyle = BorderStyle.FixedSingle;
+
+                // 【新增】显示提示标签
+                if (lblAnalysisInfo != null)
+                {
+                    lblAnalysisInfo.Text = $"当前统计对象: {tvProfiles.SelectedNode.Text}";
+                    lblAnalysisInfo.Visible = true;
+                    // 右对齐调整
+                    lblAnalysisInfo.Location = new Point(splitContainer1.Panel2.Width - lblAnalysisInfo.Width - 10, lblAnalysisInfo.Location.Y);
+                }
             }
             // 刷新地图
             UpdateMap();
+        }
+        */
+        private void ToggleHeatmap_Click(object sender, EventArgs e)
+        {
+            if (_isHeatmapEnabled)
+            {
+                // 关闭功能
+                _isHeatmapEnabled = false;
+                _heatmapStats = null;
+
+                // 【UI 反馈】 按钮背景恢复透明
+                pbAnalysis.BackColor = Color.Transparent;
+                pbAnalysis.BorderStyle = BorderStyle.None;
+            }
+            else
+            {
+                // 开启功能
+                if (tvProfiles.SelectedNode == null)
+                {
+                    FrmActionBox.Show("请先选择一个档案或用户！", ActionType.Error);
+                    return;
+                }
+
+                // 1. 计算去过的数据 (字典: 区域名 -> 站点数)
+                _heatmapStats = CalculateStatsForNode(tvProfiles.SelectedNode.Tag);
+
+                // 2. 开启地图渲染
+                _isHeatmapEnabled = true;
+
+                // 【UI 反馈】 按钮背景变色
+                pbAnalysis.BackColor = Color.LightSkyBlue;
+                pbAnalysis.BorderStyle = BorderStyle.FixedSingle;
+
+                // 【新增】显示提示标签
+                if (lblAnalysisInfo != null)
+                {
+                    lblAnalysisInfo.Text = $"当前统计对象: {tvProfiles.SelectedNode.Text}";
+                    lblAnalysisInfo.Visible = true;
+                    // 右对齐调整
+                    lblAnalysisInfo.Location = new Point(splitContainer1.Panel2.Width - lblAnalysisInfo.Width - 10, lblAnalysisInfo.Location.Y);
+                }
+
+                // ==========================================
+                // ★★★ 新增：覆盖率统计与弹窗报告 ★★★
+                // ==========================================
+                ShowCoverageReport(_heatmapStats);
+            }
+            // 刷新地图
+            UpdateMap();
+        }
+
+        // 辅助方法：生成并展示统计报告
+        private void ShowCoverageReport(Dictionary<string, int> visitedStats)
+        {
+            if (districtLayer == null || districtLayer.FeatureCount() == 0)
+            {
+                FrmActionBox.Show("未加载地图图层，无法计算覆盖率。", ActionType.Error);
+                return;
+            }
+
+            // 1. 获取所有乡镇单元的总列表
+            List<string> allRegions = new List<string>();
+            for (int i = 0; i < districtLayer.FeatureCount(); i++)
+            {
+                string name = districtLayer.GetFeature(i).getAttribute(0).ToString().Trim();
+                if (!allRegions.Contains(name))
+                {
+                    allRegions.Add(name);
+                }
+            }
+
+            // 2. ★关键修改1：检查窗口是否已打开
+            if (_currentReportForm != null && !_currentReportForm.IsDisposed)
+            {
+                // 如果已经打开了，就把它带到前台，不重新创建
+                _currentReportForm.BringToFront();
+                return;
+            }
+
+            // 3. 创建新窗口并显示
+            // 注意：这里不需要再手动拼装 StringBuilder 文本了，直接把原始数据传给新窗口即可
+            _currentReportForm = new FrmStatsReport(visitedStats, allRegions);
+
+            // ★关键修改1：使用 Show() 实现非模态，允许与主程序交互
+            _currentReportForm.Show(this);
         }
 
         // 刷新 TreeView 显示
         private void RefreshTree()
         {
             tvProfiles.Nodes.Clear();
-            foreach (var user in ProfileManager.Instance.Users)
+
+            // ==========================================
+            // 【核心修改】只显示当前用户
+            // ==========================================
+            var currentUser = ProfileManager.Instance.CurrentUser;
+            if (currentUser == null) return;
+
+            // 1级节点：当前用户
+            TreeNode userNode = new TreeNode(currentUser.Name);
+            userNode.Tag = currentUser;
+            userNode.ImageKey = "user";
+
+            // 显示该用户下的所有档案
+            foreach (var archive in currentUser.Archives)
             {
-                // 1级节点：用户
-                TreeNode userNode = new TreeNode(user.Name);
-                userNode.Tag = user; // 绑定数据对象
-                userNode.ImageKey = "user";
+                // 2级节点：档案
+                TreeNode archiveNode = new TreeNode(archive.Name);
+                archiveNode.Tag = archive;
 
-                foreach (var archive in user.Archives)
+                foreach (var trip in archive.Trips)
                 {
-                    // 2级节点：档案
-                    TreeNode archiveNode = new TreeNode(archive.Name);
-                    archiveNode.Tag = archive;
-
-                    foreach (var trip in archive.Trips)
-                    {
-                        // 3级节点：行程
-                        TreeNode tripNode = new TreeNode($"{trip.RouteName} ({trip.StartStop}-{trip.EndStop})");
-                        tripNode.Tag = trip;
-                        archiveNode.Nodes.Add(tripNode);
-                    }
-                    userNode.Nodes.Add(archiveNode);
+                    // 3级节点：行程
+                    TreeNode tripNode = new TreeNode($"{trip.RouteName} ({trip.StartStop}-{trip.EndStop})");
+                    tripNode.Tag = trip;
+                    archiveNode.Nodes.Add(tripNode);
                 }
-                tvProfiles.Nodes.Add(userNode);
+                userNode.Nodes.Add(archiveNode);
             }
+            tvProfiles.Nodes.Add(userNode);
             tvProfiles.ExpandAll();
         }
 
@@ -252,6 +411,7 @@ namespace GIS2025
         // ==========================================
 
         // 点击头像更换图片
+        /*
         private void PbAvatar_Click(object sender, EventArgs e)
         {
             // 获取当前选中的用户
@@ -271,65 +431,84 @@ namespace GIS2025
 
                 currentUser.AvatarPath = destPath;
                 pbAvatar.Image = Image.FromFile(destPath);
-                ProfileManager.Instance.Save(); // 保存更改
+                ProfileManager.Instance.SaveCurrentUser();
+            }
+        }
+        */
+        // 【新增】切换用户
+        private void SwitchUser()
+        {
+            DialogResult result = FrmActionBox.Show("确定要退出当前用户并切换账号吗？", ActionType.Confirm);
+            if (result == DialogResult.Yes)
+            {
+                // 最简单的办法：重启程序，这样会重新进入 FrmUserSelect 界面
+                Application.Restart();
             }
         }
 
+
+        /*
         // 右键点击节点时自动选中它
         private void TvProfiles_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             if (e.Button == MouseButtons.Right) tvProfiles.SelectedNode = e.Node;
         }
+        */
 
-        private void CreateNewUser()
-        {
-            string name = Microsoft.VisualBasic.Interaction.InputBox("请输入新用户名:", "新建用户", "新用户");
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                var newUser = new UserProfile(name);
-                ProfileManager.Instance.Users.Add(newUser);
-                ProfileManager.Instance.Save();
-                RefreshTree();
-            }
-        }
-
+        // 【重写】创建新档案 (改为直接生成 .trj 文件)
         private void CreateNewArchive()
         {
-            // 必须选中一个用户或其子节点，才能创建档案
-            UserProfile user = GetSelectedUser();
-            if (user == null) { FrmActionBox.Show("请先选择一个档案或用户！", ActionType.Error); return; }
-
+            // 不需要先选用户了，因为只能给 CurrentUser 建档案
             string name = Microsoft.VisualBasic.Interaction.InputBox("请输入档案名称:", "新建档案", DateTime.Now.ToString("yyyy-MM-dd") + " 出游");
             if (!string.IsNullOrWhiteSpace(name))
             {
                 var newArchive = new DailyArchive(name);
-                user.Archives.Add(newArchive);
-                ProfileManager.Instance.Save();
+
+                // 1. 加入内存列表
+                ProfileManager.Instance.CurrentUser.Archives.Add(newArchive);
+
+                // 2. 【关键】立即保存为 .trj 文件
+                ProfileManager.Instance.SaveArchive(newArchive);
+
                 RefreshTree();
+                SelectNodeByTag(newArchive); // 自动选中
+                FrmActionBox.Show("创建成功", ActionType.Success);
             }
         }
 
+        // 【重写】删除逻辑 (适配文件删除)
         private void DeleteCurrentNode()
         {
             TreeNode node = tvProfiles.SelectedNode;
             if (node == null) return;
-
-            if (MessageBox.Show($"确定要删除 '{node.Text}' 吗？此操作不可恢复。", "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (node.Tag is UserProfile)
             {
-                if (node.Tag is UserProfile u) ProfileManager.Instance.Users.Remove(u);
-                else if (node.Tag is DailyArchive a)
+                FrmActionBox.Show("无法删除当前登录的用户，请去登录界面删除", ActionType.Error);
+                return;
+            }
+            DialogResult result = FrmActionBox.Show($"确定要删除 '{node.Text}' 吗？此操作不可恢复。", ActionType.Confirm);
+            if (result == DialogResult.Yes)
+            {
+                
+                if (node.Tag is DailyArchive archive)
                 {
-                    // 找到父用户并删除该档案
-                    var parentUser = node.Parent.Tag as UserProfile;
-                    parentUser?.Archives.Remove(a);
+                    // 删除档案文件
+                    ProfileManager.Instance.DeleteArchive(archive);
+                    FrmActionBox.Show("操作成功", ActionType.Success);
                 }
-                else if (node.Tag is TripArchiveItem t)
+                else if (node.Tag is TripArchiveItem trip)
                 {
+                    // 删除行程：先从父档案里移除，然后保存父档案
                     var parentArchive = node.Parent.Tag as DailyArchive;
-                    parentArchive?.Trips.Remove(t);
+                    if (parentArchive != null)
+                    {
+                        parentArchive.Trips.Remove(trip);
+                        // 保存更新后的档案文件
+                        ProfileManager.Instance.SaveArchive(parentArchive);
+                    }
+                    FrmActionBox.Show("操作成功", ActionType.Success);
                 }
 
-                ProfileManager.Instance.Save();
                 RefreshTree();
                 UpdateMap();
             }
@@ -339,81 +518,74 @@ namespace GIS2025
         // .trj 导入导出交互逻辑
         // ==========================================
 
+        // 【重写】导入 .trj
         private void ImportTrj_Click()
         {
-            // 1. 必须选中一个“用户”节点，才知道要把行程导给谁
-            UserProfile targetUser = GetSelectedUser();
-            if (targetUser == null)
-            {
-                //MessageBox.Show("请先在列表中选中一个【用户】(或其下属节点)，以便导入数据！");
-                FrmActionBox.Show("请先在列表中选中一个【用户】(或其下属节点)，以便导入数据！", ActionType.Error);
-                return;
-            }
-
-            // 2. 选择文件
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Filter = "公交行程文件 (*.trj)|*.trj";
-            dlg.Title = "导入行程记录";
+            dlg.Title = "导入公交行程文件";
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                // 3. 显示 Loading (因为重建轨迹可能需要几秒钟)
-                pbLoading.Visible = true;
-                lblStats.Text = "正在解析并重建轨迹...";
-                Application.DoEvents(); // 强制刷新界面
-
-                // 4. 调用管理器进行导入 (传入 calculator 以便计算红线)
                 try
                 {
-                    ProfileManager.Instance.ImportTrj(dlg.FileName, targetUser, _calculator);
+                    // 1. 构造目标路径：user/当前用户/文件名.trj
+                    string userDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "user", ProfileManager.Instance.CurrentUser.Name);
+                    string destPath = Path.Combine(userDir, Path.GetFileName(dlg.FileName));
 
-                    // 5. 刷新界面
+                    // 2. 复制文件 (如果重名则覆盖)
+                    File.Copy(dlg.FileName, destPath, true);
+
+                    // 3. 重新加载该用户的档案 (为了省事，直接调用 LoginUser 重新读一遍目录)
+                    // 这一步会把新复制进来的文件读到内存 Archives 列表里
+                    ProfileManager.Instance.LoginUser(ProfileManager.Instance.CurrentUser.Name);
+
+                    // 4. 复活几何 (因为刚读进来只有文本)
+                    ProfileManager.Instance.RestoreGeometries(_calculator);
+
                     RefreshTree();
-                    tvProfiles.ExpandAll(); // 展开看新导入的东西
+                    FrmActionBox.Show("导入成功！", ActionType.Success);
                 }
                 catch (Exception ex)
                 {
-                    //MessageBox.Show("导入过程中发生错误：" + ex.Message);
-                    FrmActionBox.Show("导入过程中发生错误：" + ex.Message, ActionType.Error);
-                }
-                finally
-                {
-                    pbLoading.Visible = false;
-                    lblStats.Text = "导入完成";
+                    FrmActionBox.Show("导入失败: " + ex.Message, ActionType.Error);
                 }
             }
         }
 
+        // 【重写】导出 .trj
         private void ExportTrj_Click()
         {
-            // 1. 必须选中一个“档案”节点
             DailyArchive targetArchive = GetSelectedArchive();
             if (targetArchive == null)
             {
-                //MessageBox.Show("请先选中一个【档案】(如 '12月12日出游') 进行导出！\n(不能导出整个用户，只能导出单次档案)");
-                FrmActionBox.Show("请先选中一个【档案】(如 '12月12日出游') 进行导出！\n(不能导出整个用户，只能导出单次档案)", ActionType.Error);
+                FrmActionBox.Show("请先选中一个【档案】进行导出！", ActionType.Error);
                 return;
             }
 
-            // 2. 找到这个档案所属的用户 (作为作者名)
-            UserProfile author = null;
-            // 简单反查：遍历所有用户找这个档案
-            foreach (var u in ProfileManager.Instance.Users)
-            {
-                if (u.Archives.Contains(targetArchive)) { author = u; break; }
-            }
-            string authorName = author?.Name ?? "未知用户";
-
-            // 3. 选择保存位置
             SaveFileDialog dlg = new SaveFileDialog();
             dlg.Filter = "公交行程文件 (*.trj)|*.trj";
-            dlg.FileName = targetArchive.Name + ".trj"; // 默认文件名
-            dlg.Title = "导出行程记录";
+            dlg.FileName = targetArchive.Name + ".trj";
+            dlg.Title = "分享我的行程";
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                // 4. 调用管理器导出
-                ProfileManager.Instance.ExportTrj(targetArchive, dlg.FileName, authorName);
+                try
+                {
+                    // 1. 找到源文件路径
+                    string userDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "user", ProfileManager.Instance.CurrentUser.Name);
+                    // 这里假设文件名和档案名一致（在SaveArchive里处理过），或者我们可以重新序列化一次到目标路径
+                    // 为了保险起见，直接把内存里的对象序列化到目标路径最稳妥
+
+                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(targetArchive, Newtonsoft.Json.Formatting.Indented);
+                    File.WriteAllText(dlg.FileName, json);
+
+                    FrmActionBox.Show("导出成功！", ActionType.Success);
+                }
+                catch (Exception ex)
+                {
+                    FrmActionBox.Show("导出失败: " + ex.Message, ActionType.Error);
+                }
             }
         }
 
@@ -509,27 +681,17 @@ namespace GIS2025
 
             if (tripGeometry != null && stats != null)
             {
-                // 创建行程对象
                 var newItem = new TripArchiveItem(route, dir, start, end, tripGeometry);
+                newItem.Length = tripGeometry.length * 111000.0;
 
-                // ==========================================
-                // ★★★ 新增：计算里程并赋值 ★★★
-                // ==========================================
-                // tripGeometry.length 是底层 BasicClasses 计算的长度（单位：度）
-                // 粗略换算：1度 ≈ 111公里
-                double degreeLength = tripGeometry.length;
-                double kmLength = degreeLength * 111.0;
-
-                newItem.Length = Math.Round(kmLength, 2); // 保留2位小数
-                // ==========================================
-
-                // 加入档案
                 targetArchive.Trips.Add(newItem);
 
-                // 保存 (Length 属性会被自动写入 profiles.json)
-                ProfileManager.Instance.Save();
+                // ==========================================
+                // 【核心修改】只保存当前这个档案 (.trj)
+                // 原代码: ProfileManager.Instance.Save();
+                // ==========================================
+                ProfileManager.Instance.SaveArchive(targetArchive);
 
-                // 刷新界面
                 RefreshTree();
                 SelectNodeByTag(newItem);
 
@@ -612,48 +774,61 @@ namespace GIS2025
                 List<TripArchiveItem> tripsToDraw = new List<TripArchiveItem>();
                 TripArchiveItem highlightTrip = null;
 
+                string lengthText = "";
+
                 if (node != null)
                 {
-                    if (node.Tag is UserProfile u)
+                    // 1. 先尝试找到当前节点所属的 UserProfile 对象
+                    UserProfile activeUser = null;
+                    if (node.Tag is UserProfile u) activeUser = u;
+                    else if (node.Tag is DailyArchive a && node.Parent?.Tag is UserProfile p) activeUser = p;
+                    else if (node.Tag is TripArchiveItem t && node.Parent?.Parent?.Tag is UserProfile pp) activeUser = pp;
+
+                    // 2. 如果找到了用户，就统一刷新左上角的用户信息 (头像 + 总里程)
+                    if (activeUser != null)
                     {
-                        // situation 1: 选中用户 -> 画该用户所有档案的所有行程
-                        foreach (var archive in u.Archives)
+                        // 刷新头像 (复用之前的逻辑)
+                        if (!string.IsNullOrEmpty(activeUser.AvatarPath) && File.Exists(activeUser.AvatarPath))
+                            pbAvatar.Image = Image.FromFile(activeUser.AvatarPath);
+                        else
                         {
-                            tripsToDraw.AddRange(archive.Trips); // ★★★ 这一句必须加回来！
+                            string fixPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "pic", "chr", Path.GetFileName(activeUser.AvatarPath));
+                            if (File.Exists(fixPath)) pbAvatar.Image = Image.FromFile(fixPath);
+                            else pbAvatar.Image = null;
                         }
 
-                        // 更新 UI
-                        lblUserName.Text = u.Name;
-                        UpdateUserStats(u); // 你新增的统计
+                        // ★★★ 刷新左上角总里程 (这里就是之前一直显示0的原因) ★★★
+                        lblUserName.Text = $"{activeUser.Name}\n总里程: {activeUser.TotalDistance:F1} km";
+                    }
+
+                    // 3. 处理不同节点的绘图和右下角标签逻辑
+                    if (node.Tag is UserProfile u2)
+                    {
+                        lengthText = $"用户总里程: {u2.TotalDistance:F1} km";
+                        foreach (var archive in u2.Archives) tripsToDraw.AddRange(archive.Trips);
                     }
                     else if (node.Tag is DailyArchive a)
                     {
-                        // situation 2: 选中档案 -> 画该档案下的所有行程
-                        tripsToDraw.AddRange(a.Trips); // ★★★ 这一句必须加回来！
+                        double archiveLen = 0;
+                        foreach (var t in a.Trips) archiveLen += t.Length;
+                        lengthText = $"档案里程: {(archiveLen / 1000.0):F2} km"; // 米转公里
 
-                        // 更新 UI (找到父节点的用户进行统计)
-                        if (node.Parent != null && node.Parent.Tag is UserProfile parentUser)
-                        {
-                            UpdateUserStats(parentUser);
-                        }
+                        tripsToDraw.AddRange(a.Trips);
                     }
                     else if (node.Tag is TripArchiveItem t)
                     {
-                        // situation 3: 选中单条行程 -> 高亮它，并把同档案的其他行程作为背景
-                        highlightTrip = t; // ★★★ 标记高亮对象
-
-                        // 找到父档案，把里面的行程都加进去作为背景
-                        if (node.Parent != null && node.Parent.Tag is DailyArchive parentArchive)
-                        {
-                            tripsToDraw.AddRange(parentArchive.Trips); // ★★★ 这一句必须加回来！
-                        }
-
-                        // 更新 UI (找到爷爷节点的用户进行统计)
-                        if (node.Parent != null && node.Parent.Parent != null && node.Parent.Parent.Tag is UserProfile grandParentUser)
-                        {
-                            UpdateUserStats(grandParentUser);
-                        }
+                        lengthText = $"线路长度: {(t.Length / 1000.0):F2} km"; // 米转公里
+                        highlightTrip = t;
+                        if (node.Parent?.Tag is DailyArchive pa) tripsToDraw.AddRange(pa.Trips);
                     }
+                }
+
+                // 更新右下角标签
+                if (lblLengthInfo != null)
+                {
+                    lblLengthInfo.Text = lengthText;
+                    // 重新调整位置，防止文字太长超出边界
+                    lblLengthInfo.Location = new Point(splitContainer1.Panel2.Width - lblLengthInfo.Width - 10, lblLengthInfo.Location.Y);
                 }
 
                 // 绘制背景行程 (蓝色)

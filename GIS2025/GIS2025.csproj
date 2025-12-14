@@ -68,6 +68,15 @@
     <Compile Include="FrmActionBox.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="FrmStatsReport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmUserCreate.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmUserSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="JourneyCalculator.cs" />
     <Compile Include="ProfileManager.cs" />
     <Compile Include="ProfileModels.cs" />
@@ -260,6 +269,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="data\pic\success.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="data\pic\warning.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="data\PreProcess.py">
