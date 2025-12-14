@@ -24,6 +24,8 @@
             this.pbExport = new System.Windows.Forms.PictureBox();
             this.pbAnalysis = new System.Windows.Forms.PictureBox();
             this.pbDelete = new System.Windows.Forms.PictureBox();
+            this.pbRename = new System.Windows.Forms.PictureBox();
+            this.pbOpenRaw = new System.Windows.Forms.PictureBox();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblStats = new System.Windows.Forms.Label();
@@ -57,6 +59,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbExport)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbAnalysis)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbDelete)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbRename)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbOpenRaw)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.panelUser.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbAvatar)).BeginInit();
@@ -68,7 +72,7 @@
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -79,7 +83,7 @@
             this.splitContainer1.Panel1.Controls.Add(this.label5);
             this.splitContainer1.Panel1.Controls.Add(this.groupBox1);
             this.splitContainer1.Panel1.Controls.Add(this.panelUser);
-            this.splitContainer1.Panel1.Padding = new System.Windows.Forms.Padding(13, 12, 13, 12);
+            this.splitContainer1.Panel1.Padding = new System.Windows.Forms.Padding(15, 14, 15, 14);
             // 
             // splitContainer1.Panel2
             // 
@@ -92,8 +96,8 @@
             this.splitContainer1.Panel2.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseMove);
             this.splitContainer1.Panel2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseUp);
             this.splitContainer1.Panel2.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.MapPanel_MouseWheel);
-            this.splitContainer1.Size = new System.Drawing.Size(1445, 826);
-            this.splitContainer1.SplitterDistance = 300;
+            this.splitContainer1.Size = new System.Drawing.Size(1626, 991);
+            this.splitContainer1.SplitterDistance = 329;
             this.splitContainer1.TabIndex = 0;
             // 
             // tvProfiles
@@ -105,11 +109,11 @@
             this.tvProfiles.FullRowSelect = true;
             this.tvProfiles.HideSelection = false;
             this.tvProfiles.ItemHeight = 24;
-            this.tvProfiles.Location = new System.Drawing.Point(13, 543);
-            this.tvProfiles.Margin = new System.Windows.Forms.Padding(4);
+            this.tvProfiles.Location = new System.Drawing.Point(15, 653);
+            this.tvProfiles.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tvProfiles.Name = "tvProfiles";
             this.tvProfiles.ShowLines = false;
-            this.tvProfiles.Size = new System.Drawing.Size(274, 221);
+            this.tvProfiles.Size = new System.Drawing.Size(299, 264);
             this.tvProfiles.TabIndex = 3;
             // 
             // panelToolbar
@@ -121,21 +125,23 @@
             this.panelToolbar.Controls.Add(this.pbExport);
             this.panelToolbar.Controls.Add(this.pbAnalysis);
             this.panelToolbar.Controls.Add(this.pbDelete);
+            this.panelToolbar.Controls.Add(this.pbRename);
+            this.panelToolbar.Controls.Add(this.pbOpenRaw);
             this.panelToolbar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelToolbar.Location = new System.Drawing.Point(13, 764);
-            this.panelToolbar.Margin = new System.Windows.Forms.Padding(4);
+            this.panelToolbar.Location = new System.Drawing.Point(15, 917);
+            this.panelToolbar.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panelToolbar.Name = "panelToolbar";
-            this.panelToolbar.Padding = new System.Windows.Forms.Padding(7, 6, 7, 6);
-            this.panelToolbar.Size = new System.Drawing.Size(274, 50);
+            this.panelToolbar.Padding = new System.Windows.Forms.Padding(8, 7, 8, 7);
+            this.panelToolbar.Size = new System.Drawing.Size(299, 60);
             this.panelToolbar.TabIndex = 5;
             // 
             // pbAddUser
             // 
             this.pbAddUser.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pbAddUser.Location = new System.Drawing.Point(11, 10);
-            this.pbAddUser.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbAddUser.Location = new System.Drawing.Point(12, 12);
+            this.pbAddUser.Margin = new System.Windows.Forms.Padding(4, 5, 15, 5);
             this.pbAddUser.Name = "pbAddUser";
-            this.pbAddUser.Size = new System.Drawing.Size(32, 30);
+            this.pbAddUser.Size = new System.Drawing.Size(36, 36);
             this.pbAddUser.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbAddUser.TabIndex = 0;
             this.pbAddUser.TabStop = false;
@@ -144,10 +150,10 @@
             // pbAddArchive
             // 
             this.pbAddArchive.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pbAddArchive.Location = new System.Drawing.Point(60, 10);
-            this.pbAddArchive.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbAddArchive.Location = new System.Drawing.Point(67, 12);
+            this.pbAddArchive.Margin = new System.Windows.Forms.Padding(4, 5, 15, 5);
             this.pbAddArchive.Name = "pbAddArchive";
-            this.pbAddArchive.Size = new System.Drawing.Size(32, 30);
+            this.pbAddArchive.Size = new System.Drawing.Size(36, 36);
             this.pbAddArchive.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbAddArchive.TabIndex = 1;
             this.pbAddArchive.TabStop = false;
@@ -156,10 +162,10 @@
             // pbImport
             // 
             this.pbImport.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pbImport.Location = new System.Drawing.Point(109, 10);
-            this.pbImport.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbImport.Location = new System.Drawing.Point(122, 12);
+            this.pbImport.Margin = new System.Windows.Forms.Padding(4, 5, 15, 5);
             this.pbImport.Name = "pbImport";
-            this.pbImport.Size = new System.Drawing.Size(32, 30);
+            this.pbImport.Size = new System.Drawing.Size(36, 36);
             this.pbImport.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbImport.TabIndex = 2;
             this.pbImport.TabStop = false;
@@ -168,10 +174,10 @@
             // pbExport
             // 
             this.pbExport.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pbExport.Location = new System.Drawing.Point(158, 10);
-            this.pbExport.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbExport.Location = new System.Drawing.Point(177, 12);
+            this.pbExport.Margin = new System.Windows.Forms.Padding(4, 5, 15, 5);
             this.pbExport.Name = "pbExport";
-            this.pbExport.Size = new System.Drawing.Size(32, 30);
+            this.pbExport.Size = new System.Drawing.Size(36, 36);
             this.pbExport.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbExport.TabIndex = 3;
             this.pbExport.TabStop = false;
@@ -180,10 +186,10 @@
             // pbAnalysis
             // 
             this.pbAnalysis.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pbAnalysis.Location = new System.Drawing.Point(207, 10);
-            this.pbAnalysis.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbAnalysis.Location = new System.Drawing.Point(232, 12);
+            this.pbAnalysis.Margin = new System.Windows.Forms.Padding(4, 5, 15, 5);
             this.pbAnalysis.Name = "pbAnalysis";
-            this.pbAnalysis.Size = new System.Drawing.Size(32, 30);
+            this.pbAnalysis.Size = new System.Drawing.Size(36, 36);
             this.pbAnalysis.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbAnalysis.TabIndex = 4;
             this.pbAnalysis.TabStop = false;
@@ -192,14 +198,36 @@
             // pbDelete
             // 
             this.pbDelete.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pbDelete.Location = new System.Drawing.Point(11, 48);
-            this.pbDelete.Margin = new System.Windows.Forms.Padding(4, 4, 13, 4);
+            this.pbDelete.Location = new System.Drawing.Point(12, 58);
+            this.pbDelete.Margin = new System.Windows.Forms.Padding(4, 5, 15, 5);
             this.pbDelete.Name = "pbDelete";
-            this.pbDelete.Size = new System.Drawing.Size(32, 30);
+            this.pbDelete.Size = new System.Drawing.Size(36, 36);
             this.pbDelete.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbDelete.TabIndex = 5;
             this.pbDelete.TabStop = false;
             this.toolTip1.SetToolTip(this.pbDelete, "删除选中项");
+            // 
+            // pbRename
+            // 
+            this.pbRename.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbRename.Location = new System.Drawing.Point(66, 57);
+            this.pbRename.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.pbRename.Name = "pbRename";
+            this.pbRename.Size = new System.Drawing.Size(39, 42);
+            this.pbRename.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbRename.TabIndex = 6;
+            this.pbRename.TabStop = false;
+            // 
+            // pbOpenRaw
+            // 
+            this.pbOpenRaw.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pbOpenRaw.Location = new System.Drawing.Point(111, 57);
+            this.pbOpenRaw.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.pbOpenRaw.Name = "pbOpenRaw";
+            this.pbOpenRaw.Size = new System.Drawing.Size(39, 42);
+            this.pbOpenRaw.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pbOpenRaw.TabIndex = 7;
+            this.pbOpenRaw.TabStop = false;
             // 
             // label5
             // 
@@ -207,11 +235,11 @@
             this.label5.Dock = System.Windows.Forms.DockStyle.Top;
             this.label5.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.label5.Location = new System.Drawing.Point(13, 512);
+            this.label5.Location = new System.Drawing.Point(15, 614);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
-            this.label5.Padding = new System.Windows.Forms.Padding(0, 6, 0, 6);
-            this.label5.Size = new System.Drawing.Size(69, 31);
+            this.label5.Padding = new System.Windows.Forms.Padding(0, 7, 0, 7);
+            this.label5.Size = new System.Drawing.Size(84, 39);
             this.label5.TabIndex = 2;
             this.label5.Text = "我的档案";
             // 
@@ -229,11 +257,11 @@
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.groupBox1.Location = new System.Drawing.Point(13, 112);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox1.Location = new System.Drawing.Point(15, 134);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(274, 400);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox1.Size = new System.Drawing.Size(299, 480);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "新建行程";
@@ -243,10 +271,10 @@
             this.lblStats.AutoSize = true;
             this.lblStats.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblStats.ForeColor = System.Drawing.Color.DimGray;
-            this.lblStats.Location = new System.Drawing.Point(20, 362);
+            this.lblStats.Location = new System.Drawing.Point(22, 434);
             this.lblStats.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblStats.Name = "lblStats";
-            this.lblStats.Size = new System.Drawing.Size(81, 20);
+            this.lblStats.Size = new System.Drawing.Size(94, 24);
             this.lblStats.TabIndex = 9;
             this.lblStats.Text = "等待计算...";
             // 
@@ -255,10 +283,10 @@
             this.btnAddTrip.BackColor = System.Drawing.Color.SteelBlue;
             this.btnAddTrip.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAddTrip.ForeColor = System.Drawing.Color.White;
-            this.btnAddTrip.Location = new System.Drawing.Point(20, 306);
-            this.btnAddTrip.Margin = new System.Windows.Forms.Padding(4);
+            this.btnAddTrip.Location = new System.Drawing.Point(22, 367);
+            this.btnAddTrip.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnAddTrip.Name = "btnAddTrip";
-            this.btnAddTrip.Size = new System.Drawing.Size(333, 44);
+            this.btnAddTrip.Size = new System.Drawing.Size(375, 53);
             this.btnAddTrip.TabIndex = 8;
             this.btnAddTrip.Text = "生成轨迹并分析";
             this.btnAddTrip.UseVisualStyleBackColor = false;
@@ -269,20 +297,20 @@
             this.cbEndStop.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbEndStop.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.cbEndStop.FormattingEnabled = true;
-            this.cbEndStop.Location = new System.Drawing.Point(20, 256);
-            this.cbEndStop.Margin = new System.Windows.Forms.Padding(4);
+            this.cbEndStop.Location = new System.Drawing.Point(22, 307);
+            this.cbEndStop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbEndStop.Name = "cbEndStop";
-            this.cbEndStop.Size = new System.Drawing.Size(332, 28);
+            this.cbEndStop.Size = new System.Drawing.Size(373, 32);
             this.cbEndStop.TabIndex = 7;
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label4.Location = new System.Drawing.Point(20, 231);
+            this.label4.Location = new System.Drawing.Point(22, 277);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(54, 20);
+            this.label4.Size = new System.Drawing.Size(64, 24);
             this.label4.TabIndex = 6;
             this.label4.Text = "下车站";
             // 
@@ -291,20 +319,20 @@
             this.cbStartStop.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbStartStop.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.cbStartStop.FormattingEnabled = true;
-            this.cbStartStop.Location = new System.Drawing.Point(20, 188);
-            this.cbStartStop.Margin = new System.Windows.Forms.Padding(4);
+            this.cbStartStop.Location = new System.Drawing.Point(22, 226);
+            this.cbStartStop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbStartStop.Name = "cbStartStop";
-            this.cbStartStop.Size = new System.Drawing.Size(332, 28);
+            this.cbStartStop.Size = new System.Drawing.Size(373, 32);
             this.cbStartStop.TabIndex = 5;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label3.Location = new System.Drawing.Point(20, 162);
+            this.label3.Location = new System.Drawing.Point(22, 194);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(54, 20);
+            this.label3.Size = new System.Drawing.Size(64, 24);
             this.label3.TabIndex = 4;
             this.label3.Text = "上车站";
             // 
@@ -313,10 +341,10 @@
             this.cbDirection.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbDirection.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.cbDirection.FormattingEnabled = true;
-            this.cbDirection.Location = new System.Drawing.Point(20, 119);
-            this.cbDirection.Margin = new System.Windows.Forms.Padding(4);
+            this.cbDirection.Location = new System.Drawing.Point(22, 143);
+            this.cbDirection.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbDirection.Name = "cbDirection";
-            this.cbDirection.Size = new System.Drawing.Size(332, 28);
+            this.cbDirection.Size = new System.Drawing.Size(373, 32);
             this.cbDirection.TabIndex = 3;
             this.cbDirection.SelectedIndexChanged += new System.EventHandler(this.cbDirection_SelectedIndexChanged);
             // 
@@ -324,10 +352,10 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label2.Location = new System.Drawing.Point(20, 94);
+            this.label2.Location = new System.Drawing.Point(22, 113);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(39, 20);
+            this.label2.Size = new System.Drawing.Size(46, 24);
             this.label2.TabIndex = 2;
             this.label2.Text = "方向";
             // 
@@ -336,10 +364,10 @@
             this.cbRoutes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbRoutes.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.cbRoutes.FormattingEnabled = true;
-            this.cbRoutes.Location = new System.Drawing.Point(20, 50);
-            this.cbRoutes.Margin = new System.Windows.Forms.Padding(4);
+            this.cbRoutes.Location = new System.Drawing.Point(22, 60);
+            this.cbRoutes.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbRoutes.Name = "cbRoutes";
-            this.cbRoutes.Size = new System.Drawing.Size(332, 28);
+            this.cbRoutes.Size = new System.Drawing.Size(373, 32);
             this.cbRoutes.TabIndex = 1;
             this.cbRoutes.SelectedIndexChanged += new System.EventHandler(this.cbRoutes_SelectedIndexChanged);
             // 
@@ -347,10 +375,10 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label1.Location = new System.Drawing.Point(20, 25);
+            this.label1.Location = new System.Drawing.Point(22, 30);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(69, 20);
+            this.label1.Size = new System.Drawing.Size(82, 24);
             this.label1.TabIndex = 0;
             this.label1.Text = "选择线路";
             // 
@@ -359,20 +387,20 @@
             this.panelUser.Controls.Add(this.lblUserName);
             this.panelUser.Controls.Add(this.pbAvatar);
             this.panelUser.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelUser.Location = new System.Drawing.Point(13, 12);
-            this.panelUser.Margin = new System.Windows.Forms.Padding(4);
+            this.panelUser.Location = new System.Drawing.Point(15, 14);
+            this.panelUser.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panelUser.Name = "panelUser";
-            this.panelUser.Size = new System.Drawing.Size(274, 100);
+            this.panelUser.Size = new System.Drawing.Size(299, 120);
             this.panelUser.TabIndex = 4;
             // 
             // lblUserName
             // 
             this.lblUserName.AutoSize = true;
             this.lblUserName.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblUserName.Location = new System.Drawing.Point(107, 31);
+            this.lblUserName.Location = new System.Drawing.Point(120, 37);
             this.lblUserName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblUserName.Name = "lblUserName";
-            this.lblUserName.Size = new System.Drawing.Size(92, 27);
+            this.lblUserName.Size = new System.Drawing.Size(110, 31);
             this.lblUserName.TabIndex = 1;
             this.lblUserName.Text = "默认用户";
             // 
@@ -381,10 +409,10 @@
             this.pbAvatar.BackColor = System.Drawing.Color.White;
             this.pbAvatar.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pbAvatar.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pbAvatar.Location = new System.Drawing.Point(7, 12);
-            this.pbAvatar.Margin = new System.Windows.Forms.Padding(4);
+            this.pbAvatar.Location = new System.Drawing.Point(8, 14);
+            this.pbAvatar.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pbAvatar.Name = "pbAvatar";
-            this.pbAvatar.Size = new System.Drawing.Size(79, 74);
+            this.pbAvatar.Size = new System.Drawing.Size(89, 88);
             this.pbAvatar.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbAvatar.TabIndex = 0;
             this.pbAvatar.TabStop = false;
@@ -395,10 +423,10 @@
             this.labelXY.AutoSize = true;
             this.labelXY.BackColor = System.Drawing.Color.Transparent;
             this.labelXY.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelXY.Location = new System.Drawing.Point(28, 786);
+            this.labelXY.Location = new System.Drawing.Point(59, 943);
             this.labelXY.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelXY.Name = "labelXY";
-            this.labelXY.Size = new System.Drawing.Size(112, 18);
+            this.labelXY.Size = new System.Drawing.Size(140, 22);
             this.labelXY.TabIndex = 1;
             this.labelXY.Text = "X: 0.0, Y:0.0";
             // 
@@ -409,20 +437,20 @@
             this.panelMapTools.Controls.Add(this.bZoomOut);
             this.panelMapTools.Controls.Add(this.bZoomIn);
             this.panelMapTools.Controls.Add(this.bPan);
-            this.panelMapTools.Location = new System.Drawing.Point(27, 25);
-            this.panelMapTools.Margin = new System.Windows.Forms.Padding(4);
+            this.panelMapTools.Location = new System.Drawing.Point(30, 30);
+            this.panelMapTools.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panelMapTools.Name = "panelMapTools";
-            this.panelMapTools.Size = new System.Drawing.Size(291, 50);
+            this.panelMapTools.Size = new System.Drawing.Size(327, 60);
             this.panelMapTools.TabIndex = 0;
             // 
             // bFullExtent
             // 
             this.bFullExtent.BackColor = System.Drawing.Color.White;
             this.bFullExtent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bFullExtent.Location = new System.Drawing.Point(220, 4);
-            this.bFullExtent.Margin = new System.Windows.Forms.Padding(4);
+            this.bFullExtent.Location = new System.Drawing.Point(248, 5);
+            this.bFullExtent.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.bFullExtent.Name = "bFullExtent";
-            this.bFullExtent.Size = new System.Drawing.Size(67, 38);
+            this.bFullExtent.Size = new System.Drawing.Size(75, 46);
             this.bFullExtent.TabIndex = 3;
             this.bFullExtent.Text = "全图";
             this.bFullExtent.UseVisualStyleBackColor = false;
@@ -432,10 +460,10 @@
             // 
             this.bZoomOut.BackColor = System.Drawing.Color.White;
             this.bZoomOut.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bZoomOut.Location = new System.Drawing.Point(79, 4);
-            this.bZoomOut.Margin = new System.Windows.Forms.Padding(4);
+            this.bZoomOut.Location = new System.Drawing.Point(89, 5);
+            this.bZoomOut.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.bZoomOut.Name = "bZoomOut";
-            this.bZoomOut.Size = new System.Drawing.Size(67, 38);
+            this.bZoomOut.Size = new System.Drawing.Size(75, 46);
             this.bZoomOut.TabIndex = 1;
             this.bZoomOut.Text = "缩小";
             this.bZoomOut.UseVisualStyleBackColor = false;
@@ -445,10 +473,10 @@
             // 
             this.bZoomIn.BackColor = System.Drawing.Color.White;
             this.bZoomIn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bZoomIn.Location = new System.Drawing.Point(4, 4);
-            this.bZoomIn.Margin = new System.Windows.Forms.Padding(4);
+            this.bZoomIn.Location = new System.Drawing.Point(4, 5);
+            this.bZoomIn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.bZoomIn.Name = "bZoomIn";
-            this.bZoomIn.Size = new System.Drawing.Size(67, 38);
+            this.bZoomIn.Size = new System.Drawing.Size(75, 46);
             this.bZoomIn.TabIndex = 0;
             this.bZoomIn.Text = "放大";
             this.bZoomIn.UseVisualStyleBackColor = false;
@@ -458,10 +486,10 @@
             // 
             this.bPan.BackColor = System.Drawing.Color.White;
             this.bPan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bPan.Location = new System.Drawing.Point(149, 4);
-            this.bPan.Margin = new System.Windows.Forms.Padding(4);
+            this.bPan.Location = new System.Drawing.Point(168, 5);
+            this.bPan.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.bPan.Name = "bPan";
-            this.bPan.Size = new System.Drawing.Size(67, 38);
+            this.bPan.Size = new System.Drawing.Size(75, 46);
             this.bPan.TabIndex = 2;
             this.bPan.Text = "漫游";
             this.bPan.UseVisualStyleBackColor = false;
@@ -469,11 +497,11 @@
             // 
             // FormMap
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1445, 826);
+            this.ClientSize = new System.Drawing.Size(1626, 991);
             this.Controls.Add(this.splitContainer1);
-            this.Margin = new System.Windows.Forms.Padding(4);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "FormMap";
             this.Text = "TransitLog - \'交\'游手账";
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -489,6 +517,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbExport)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbAnalysis)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbDelete)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbRename)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbOpenRaw)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.panelUser.ResumeLayout(false);
@@ -527,6 +557,8 @@
         private System.Windows.Forms.PictureBox pbExport;
         private System.Windows.Forms.PictureBox pbAnalysis;
         private System.Windows.Forms.PictureBox pbDelete;
+        private System.Windows.Forms.PictureBox pbRename;
+        private System.Windows.Forms.PictureBox pbOpenRaw;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button bZoomOut;
         private System.Windows.Forms.Panel panelMapTools;

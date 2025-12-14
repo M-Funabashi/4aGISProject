@@ -67,6 +67,12 @@ namespace GIS2025
 
             InitProfileUI();
 
+            tvProfiles.AllowDrop = true;
+            tvProfiles.ItemDrag += TvProfiles_ItemDrag;
+            tvProfiles.DragEnter += TvProfiles_DragEnter;
+            tvProfiles.DragOver += TvProfiles_DragOver;
+            tvProfiles.DragDrop += TvProfiles_DragDrop;
+
             // Timer 设置保持不变...
             refreshTimer = new System.Windows.Forms.Timer();
             refreshTimer.Interval = 800;
@@ -190,6 +196,8 @@ namespace GIS2025
             LoadIcon(pbExport, "save.png");
             LoadIcon(pbAnalysis, "anal.png");
             LoadIcon(pbDelete, "delete.png");
+            LoadIcon(pbRename, "edit.png");
+            LoadIcon(pbOpenRaw, "file.png");
 
             // 绑定事件 (确保这些逻辑还在)
             // 注意：这里用 SwitchUser() 替换了原来的 CreateNewUser()
@@ -200,6 +208,10 @@ namespace GIS2025
             pbImport.Click += (s, e) => ImportTrj_Click();
             pbExport.Click += (s, e) => ExportTrj_Click();
             pbDelete.Click += (s, e) => DeleteCurrentNode();
+            pbRename.Click += (s, e) => RenameArchive_Click();
+            pbOpenRaw.Click += (s, e) => OpenRawData_Click();
+            toolTip1.SetToolTip(pbRename, "重命名档案");
+            toolTip1.SetToolTip(pbOpenRaw, "查看原始文件(.trj)");
             pbAnalysis.Click += ToggleHeatmap_Click;
         }
 
@@ -1052,6 +1064,127 @@ namespace GIS2025
             catch { }
 
             cbRoutes.SelectionStart = cursorPosition;
+        }
+
+        // ==========================================
+        // 新增功能：重命名、打开文件、拖拽排序
+        // ==========================================
+
+        // 1. 重命名档案
+        private void RenameArchive_Click()
+        {
+            DailyArchive archive = GetSelectedArchive();
+            if (archive == null)
+            {
+                FrmActionBox.Show("请先选择一个【档案】！", ActionType.Error);
+                return;
+            }
+
+            // 使用系统自带 InputBox 获取新名字
+            string newName = Microsoft.VisualBasic.Interaction.InputBox(
+                "请输入新的档案名称：", "重命名", archive.Name);
+
+            if (!string.IsNullOrWhiteSpace(newName) && newName != archive.Name)
+            {
+                if (ProfileManager.Instance.RenameArchive(archive, newName))
+                {
+                    FrmActionBox.Show("重命名成功！", ActionType.Success);
+                    RefreshTree();
+                    SelectNodeByTag(archive); // 保持选中
+                }
+                else
+                {
+                    FrmActionBox.Show("重命名失败，名称可能重复。", ActionType.Error);
+                }
+            }
+        }
+
+        // 2. 打开原始数据 (.trj)
+        private void OpenRawData_Click()
+        {
+            DailyArchive archive = GetSelectedArchive();
+            if (archive == null)
+            {
+                FrmActionBox.Show("请先选择一个【档案】！", ActionType.Error);
+                return;
+            }
+
+            string path = ProfileManager.Instance.GetArchiveFilePath(archive);
+            if (File.Exists(path))
+            {
+                try
+                {
+                    // 调用记事本打开
+                    System.Diagnostics.Process.Start("notepad.exe", path);
+                }
+                catch (Exception ex)
+                {
+                    FrmActionBox.Show("无法打开文件：" + ex.Message, ActionType.Error);
+                }
+            }
+            else
+            {
+                FrmActionBox.Show("文件未找到！", ActionType.Error);
+            }
+        }
+
+        // 3. TreeView 拖拽排序逻辑
+        private void TvProfiles_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            // 只有“行程”节点(Level 3)允许拖拽
+            TreeNode node = e.Item as TreeNode;
+            if (node != null && node.Tag is TripArchiveItem)
+            {
+                DoDragDrop(e.Item, DragDropEffects.Move);
+            }
+        }
+
+        private void TvProfiles_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void TvProfiles_DragOver(object sender, DragEventArgs e)
+        {
+            // 拖拽时自动选中鼠标下的节点，提供视觉反馈
+            Point targetPoint = tvProfiles.PointToClient(new Point(e.X, e.Y));
+            tvProfiles.SelectedNode = tvProfiles.GetNodeAt(targetPoint);
+        }
+
+        private void TvProfiles_DragDrop(object sender, DragEventArgs e)
+        {
+            Point targetPoint = tvProfiles.PointToClient(new Point(e.X, e.Y));
+            TreeNode targetNode = tvProfiles.GetNodeAt(targetPoint); // 放置目标
+            TreeNode draggedNode = (TreeNode)e.Data.GetData(typeof(TreeNode)); // 被拖拽节点
+
+            if (targetNode == null || draggedNode == null) return;
+
+            // 校验：必须都在同一个档案下（即同一个父节点）
+            if (targetNode.Parent != draggedNode.Parent) return;
+            if (!(targetNode.Tag is TripArchiveItem) || !(draggedNode.Tag is TripArchiveItem)) return;
+
+            // --- 开始调整数据顺序 ---
+            DailyArchive parentArchive = targetNode.Parent.Tag as DailyArchive;
+            TripArchiveItem draggedTrip = draggedNode.Tag as TripArchiveItem;
+            TripArchiveItem targetTrip = targetNode.Tag as TripArchiveItem;
+
+            int oldIndex = parentArchive.Trips.IndexOf(draggedTrip);
+            int newIndex = parentArchive.Trips.IndexOf(targetTrip);
+
+            if (oldIndex != newIndex)
+            {
+                // 1. 调整内存 List 顺序
+                parentArchive.Trips.RemoveAt(oldIndex);
+                parentArchive.Trips.Insert(newIndex, draggedTrip);
+
+                // 2. ★ 立即保存到文件 (ProfileManager 需要有 SaveArchive 方法)
+                ProfileManager.Instance.SaveArchive(parentArchive);
+
+                // 3. 刷新界面
+                RefreshTree();
+                SelectNodeByTag(draggedTrip);
+                UpdateMap();
+            }
         }
         private void cbRoutes_SelectedIndexChanged(object sender, EventArgs e) { if (cbRoutes.SelectedItem == null) return; cbDirection.Items.Clear(); cbStartStop.Items.Clear(); cbEndStop.Items.Clear(); string selectedRoute = cbRoutes.SelectedItem.ToString(); var directions = _dataManager.AllRoutes.Where(r => r.RouteName == selectedRoute).Select(r => r.Direction).ToList(); cbDirection.Items.AddRange(directions.ToArray()); if (cbDirection.Items.Count > 0) cbDirection.SelectedIndex = 0; }
         private void cbDirection_SelectedIndexChanged(object sender, EventArgs e) { cbStartStop.Items.Clear(); cbEndStop.Items.Clear(); if (cbRoutes.SelectedItem == null || cbDirection.SelectedItem == null) return; string key = $"{cbRoutes.SelectedItem}_{cbDirection.SelectedItem}"; if (_dataManager.RoutePaths.ContainsKey(key)) { List<string> stops = _dataManager.RoutePaths[key]; cbStartStop.Items.AddRange(stops.ToArray()); cbEndStop.Items.AddRange(stops.ToArray()); if (cbStartStop.Items.Count > 0) { cbStartStop.SelectedIndex = 0; cbEndStop.SelectedIndex = cbEndStop.Items.Count - 1; } } }

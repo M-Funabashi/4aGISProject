@@ -75,7 +75,7 @@ namespace GIS2025
                     catch { /* 文件损坏跳过 */ }
                 }
             }
-
+            users.Sort((a, b) => string.Compare(a.Name, b.Name)); // 首字母排序 A-Z
             // ★★★ 更新全局 Users 属性，防止外部调用空指针 ★★★
             this.Users = users;
             return users;
@@ -289,6 +289,63 @@ namespace GIS2025
 
             // 顺便保存一下最新的 info.json
             SaveCurrentUser();
+        }
+
+        // ==========================================
+        // 4. 新增：档案高级操作与辅助
+        // ==========================================
+
+        /// <summary>
+        /// 获取档案的物理文件路径
+        /// </summary>
+        public string GetArchiveFilePath(DailyArchive archive)
+        {
+            if (CurrentUser == null) return null;
+            string userDir = Path.Combine(UserRootPath, CurrentUser.Name);
+            // 保持和 SaveArchive 一致的文件名生成逻辑
+            string safeName = string.Join("_", archive.Name.Split(Path.GetInvalidFileNameChars()));
+            return Path.Combine(userDir, safeName + ".trj");
+        }
+
+        /// <summary>
+        /// 重命名档案
+        /// </summary>
+        public bool RenameArchive(DailyArchive archive, string newName)
+        {
+            if (CurrentUser == null) return false;
+
+            // 1. 获取旧路径
+            string oldPath = GetArchiveFilePath(archive);
+
+            // 2. 预判新路径
+            string userDir = Path.Combine(UserRootPath, CurrentUser.Name);
+            string safeNewName = string.Join("_", newName.Split(Path.GetInvalidFileNameChars()));
+            string newPath = Path.Combine(userDir, safeNewName + ".trj");
+
+            // 3. 检查重名
+            if (File.Exists(newPath)) return false;
+
+            try
+            {
+                // 4. 物理重命名 (如果文件存在)
+                if (File.Exists(oldPath))
+                {
+                    File.Move(oldPath, newPath);
+                }
+
+                // 5. 更新内存对象的属性
+                archive.Name = newName;
+
+                // 6. 保存内容 (确保文件内部的 Name 字段也更新，且写入新路径)
+                SaveArchive(archive);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("重命名失败: " + ex.Message);
+                return false;
+            }
         }
 
         // 删除档案功能
