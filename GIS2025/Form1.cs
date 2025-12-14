@@ -560,7 +560,7 @@ namespace GIS2025
             pbLoading.BringToFront();
             this.Refresh();
             btnAddTrip.Enabled = false; // 禁用按钮
-            lblStats.Text = "正在规划路线...";
+            lblStats.Text = "正在规划路线...当这个状态一直持续，请重启程序...";
             refreshTimer.Stop();
 
             string route = cbRoutes.Text;

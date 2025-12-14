@@ -92,61 +92,87 @@ namespace GIS2025
         // 计算这条轨迹经过了哪些行政区，以及经过的站点数量
         public Dictionary<string, int> AnalyzeDistrictsByLogic(string routeName, string direction, string startStop, string endStop)
         {
-            Dictionary<string, int> stats = new Dictionary<string, int>();
+            // 1. 数据基础清洗
             string cleanRoute = routeName?.Trim();
             string cleanDir = direction?.Trim();
             string cleanStart = startStop?.Trim();
             string cleanEnd = endStop?.Trim();
 
-            string key = $"{cleanRoute}_{cleanDir}";
-
-            if (!_dataManager.RoutePaths.ContainsKey(key))
+            Dictionary<string, int> TryCalculate(string r, string d, string s, string e)
             {
-                var fuzzyKey = _dataManager.RoutePaths.Keys.FirstOrDefault(k =>
-                    k.Replace(" ", "").ToLower() == key.Replace(" ", "").ToLower());
-
-                if (fuzzyKey != null)
+                string key = $"{r}_{d}";
+                List<string> stops = null;
+                if (_dataManager.RoutePaths.ContainsKey(key))
                 {
-                    key = fuzzyKey; 
+                    stops = _dataManager.RoutePaths[key];
                 }
                 else
                 {
-                    return stats; 
+                    var fuzzyKey = _dataManager.RoutePaths.Keys.FirstOrDefault(k =>
+                        k.Replace(" ", "").ToLower() == key.Replace(" ", "").ToLower());
+
+                    if (fuzzyKey != null) stops = _dataManager.RoutePaths[fuzzyKey];
                 }
+                if (stops == null) return null;
+
+                int startIndex = stops.FindIndex(st => st.Trim() == s);
+                int endIndex = stops.FindIndex(st => st.Trim() == e);
+
+                if (startIndex == -1 || endIndex == -1 || startIndex > endIndex)
+                {
+                    return null;
+                }
+
+                Dictionary<string, int> currentStats = new Dictionary<string, int>();
+                for (int i = startIndex; i <= endIndex; i++)
+                {
+                    string stopName = stops[i].Trim();
+                    BusStop stopObj = null;
+
+                    if (_dataManager.AllStops.ContainsKey(stopName))
+                    {
+                        stopObj = _dataManager.AllStops[stopName];
+                    }
+                    else
+                    {
+                        var fuzzyStopKey = _dataManager.AllStops.Keys.FirstOrDefault(k => k.Trim() == stopName);
+                        if (fuzzyStopKey != null) stopObj = _dataManager.AllStops[fuzzyStopKey];
+                    }
+
+                    if (stopObj != null)
+                    {
+                        string region = string.IsNullOrEmpty(stopObj.Street) ? "未知区域" : stopObj.Street;
+                        if (currentStats.ContainsKey(region)) currentStats[region]++;
+                        else currentStats[region] = 1;
+                    }
+                }
+                return currentStats;
             }
-            List<string> allStops = _dataManager.RoutePaths[key];
 
-            int startIndex = allStops.FindIndex(s => s.Trim() == cleanStart);
-            int endIndex = allStops.FindIndex(s => s.Trim() == cleanEnd);
+            Dictionary<string, int> result = null;
 
-            if (startIndex == -1 || endIndex == -1 || startIndex > endIndex) return stats;
+            // 原路原方向
+            result = TryCalculate(cleanRoute, cleanDir, cleanStart, cleanEnd);
+            if (result != null) return result;
 
-            for (int i = startIndex; i <= endIndex; i++)
+            // 反转起终点
+            result = TryCalculate(cleanRoute, cleanDir, cleanEnd, cleanStart);
+            if (result != null) return result;
+
+            // 强制切换上行
+            if (cleanDir != "上行")
             {
-                string stopName = allStops[i].Trim();
+                string fallbackDir = "上行";
 
-                BusStop stop = null;
-                if (_dataManager.AllStops.ContainsKey(stopName))
-                {
-                    stop = _dataManager.AllStops[stopName];
-                }
-                else
-                {
-                    var fuzzyStopKey = _dataManager.AllStops.Keys.FirstOrDefault(k => k.Trim() == stopName);
-                    if (fuzzyStopKey != null) stop = _dataManager.AllStops[fuzzyStopKey];
-                }
+                // 强制上行+正常起终点
+                result = TryCalculate(cleanRoute, fallbackDir, cleanStart, cleanEnd);
+                if (result != null) return result;
 
-                if (stop != null)
-                {
-                    string region = stop.Street;
-                    if (string.IsNullOrEmpty(region)) region = "未知区域";
-
-                    if (stats.ContainsKey(region)) stats[region]++;
-                    else stats[region] = 1;
-                }
+                // 强制上行+反转起终点
+                result = TryCalculate(cleanRoute, fallbackDir, cleanEnd, cleanStart);
+                if (result != null) return result;
             }
-
-            return stats;
+            return new Dictionary<string, int>();
         }
     }
 }
