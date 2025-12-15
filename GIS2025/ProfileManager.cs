@@ -86,7 +86,7 @@ namespace GIS2025
             UserProfile newUser = new UserProfile(safeName)
             {
                 // 存完整路径
-                AvatarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "pic", "chr", avatarFileName),
+                AvatarPath = Path.Combine("data", "pic", "chr", avatarFileName),
                 TotalDistance = 0
             };
 
@@ -197,7 +197,7 @@ namespace GIS2025
                 }
 
                 // 更新头像路径
-                user.AvatarPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "pic", "chr", newAvatarFileName);
+                user.AvatarPath = Path.Combine("data", "pic", "chr", newAvatarFileName);
 
                 // 保存新的 info.json
                 SaveUserInfo(user); 

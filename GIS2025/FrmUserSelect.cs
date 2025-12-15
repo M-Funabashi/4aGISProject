@@ -67,13 +67,13 @@ namespace GIS2025
             tlpButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
 
             // 第一行：加载用户
-            Button btnLoad = CreateButton("🚀 进入手账 (加载用户)", Color.SeaGreen, Color.White);
+            Button btnLoad = CreateButton("加载所选用户", Color.SeaGreen, Color.White);
             btnLoad.Click += BtnLoad_Click;
             tlpButtons.Controls.Add(btnLoad, 0, 0);
-            tlpButtons.SetColumnSpan(btnLoad, 4); // ★ 改为跨4列
+            tlpButtons.SetColumnSpan(btnLoad, 4); 
 
             // 第二行：功能按钮
-            Button btnCreate = CreateButton("➕ 新建", Color.White, Color.Black); // 文字精简一点防拥挤
+            Button btnCreate = CreateButton("➕ 新建", Color.White, Color.Black); 
             btnCreate.Click += BtnCreate_Click;
 
             Button btnEdit = CreateButton("✏️ 修改", Color.White, Color.Black);
@@ -150,14 +150,24 @@ namespace GIS2025
             };
 
             // 头像
+            string fullPath = user.AvatarPath;
+            if (!string.IsNullOrEmpty(fullPath) && !Path.IsPathRooted(fullPath))
+            {
+                // 如果是相对路径，拼接上程序的运行目录
+                fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fullPath);
+            }
+
+            // 再创建 PictureBox
             PictureBox pb = new PictureBox
             {
                 Size = new Size(100, 100),
                 Location = new Point(30, 20),
                 SizeMode = PictureBoxSizeMode.Zoom,
-                Image = File.Exists(user.AvatarPath) ? Image.FromFile(user.AvatarPath) : null,
+                // 这里直接使用处理好的 fullPath
+                Image = File.Exists(fullPath) ? Image.FromFile(fullPath) : null,
                 Enabled = false
             };
+
 
             // 名字
             Label lblName = new Label
@@ -237,7 +247,7 @@ namespace GIS2025
             if (_selectedUser == null)
             {
                 //MessageBox.Show("请先点击选择一个用户！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                FrmActionBox.Show("请先选择一个用户！", ActionType.Error);  // 使用新的消息框
+                FrmActionBox.Show("请先选择一个用户！", ActionType.Error);  
                 return;
             }
 
